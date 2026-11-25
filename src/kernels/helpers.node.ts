@@ -37,7 +37,7 @@ export async function sendTelemetryForPythonKernelExecutable(
         return;
     }
     const stopWatch = new StopWatch();
-    const startup = session.startup;
+    const startup = session.kind === 'localRaw' ? session.startup : undefined;
     const cap = startup ? Math.min(5000, Math.max(0, startup.remainingTime - 1000)) : undefined;
     if (cap === 0) {
         logger.trace('Skipping executable telemetry to preserve the remaining startup budget');

@@ -71,6 +71,17 @@ suite('Kernel Startup Recovery Budget', () => {
         assert.strictEqual(probe.callCount, 2);
     });
 
+    test('a request posted just before a tick is not probed until it has been eligible for the interval', async () => {
+        const probe = sinon.stub().resolves();
+        startup = new KernelStartupRecovery(6000, failure, probe);
+        await clock.tickAsync(900);
+        startup.sent(request());
+        await clock.tickAsync(100);
+        assert.strictEqual(probe.callCount, 0);
+        await clock.tickAsync(1000);
+        assert.strictEqual(probe.callCount, 1);
+    });
+
     test('acknowledged busy work pauses the budget and suppresses probes until idle', async () => {
         const probe = sinon.stub().resolves();
         startup = new KernelStartupRecovery(3000, failure, probe);
@@ -87,7 +98,8 @@ suite('Kernel Startup Recovery Budget', () => {
         assert.isFalse(completed);
         assert.isUndefined(startup.error);
         assert.strictEqual(startup.remainingTime, 3000);
-        startup.discardRequest(other.header.msg_id);
+        startup.received(reply(other));
+        startup.received(status(other, 'idle'));
         startup.auxiliaryReplied('pending-peer');
         startup.received(reply(original));
         startup.received(status(original, 'idle'));
@@ -233,5 +245,44 @@ suite('Kernel Startup Recovery Budget', () => {
         parent.cancel();
         assert.instanceOf(await operation, Error);
         assert.notStrictEqual(await operation, failure);
+    });
+
+    test('reports a healthy outcome when startup completes without probing', async () => {
+        const report = sinon.stub();
+        startup = new KernelStartupRecovery(3000, failure, async () => undefined, report);
+        await startup.complete(async () => undefined, parent.token);
+        assert.strictEqual(report.callCount, 1);
+        assert.strictEqual(report.firstCall.args[0].outcome, 'healthy');
+        assert.strictEqual(report.firstCall.args[0].probeCount, 0);
+    });
+
+    test('reports a recovered outcome after a probe delivers the stalled reply', async () => {
+        const original = request();
+        const report = sinon.stub();
+        const probe = sinon.stub().callsFake(async () => {
+            startup.received(reply(original));
+            startup.received(status(original, 'idle'));
+        });
+        startup = new KernelStartupRecovery(5000, failure, probe, report);
+        startup.sent(original);
+        const operation = startup.complete(async () => undefined, parent.token);
+        await clock.tickAsync(1000);
+        await operation;
+        assert.strictEqual(report.callCount, 1);
+        assert.strictEqual(report.firstCall.args[0].outcome, 'recovered');
+        assert.isAbove(report.firstCall.args[0].probeCount, 0);
+    });
+
+    test('reports a timeout outcome when the communication budget is exhausted', async () => {
+        const report = sinon.stub();
+        startup = new KernelStartupRecovery(3000, failure, async () => undefined, report);
+        startup.sent(request());
+        const operation = startup
+            .run((token) => raceCancellationError(token, createDeferred<void>().promise), parent.token)
+            .catch((error) => error);
+        await clock.tickAsync(3000);
+        await operation;
+        assert.strictEqual(report.callCount, 1);
+        assert.strictEqual(report.firstCall.args[0].outcome, 'timeout');
     });
 });

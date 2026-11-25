@@ -55,6 +55,16 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.strictEqual(fixture.startedEvents, 1);
     });
 
+    test('a raw Python kernel without startup recovery starts normally', async () => {
+        fixture = new RawStartupFixture('none', 6000, false);
+        await fixture.initialize();
+        assert.isDefined(await raceTimeout(5000, fixture.start()));
+        assert.isUndefined(fixture.session.startup);
+        assert.strictEqual(fixture.startedEvents, 1);
+        assert.strictEqual(fixture.peer.peers.size, 0);
+        await fixture.firstCell();
+    });
+
     test('healthy startup does not create a recovery peer', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -64,7 +74,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.strictEqual(fixture.startedEvents, 1);
     });
 
-    test('an unrecoverable startup fails at the shared deadline without publishing', async () => {
+    test('an unrecoverable startup fails when the communication budget is exhausted without publishing', async () => {
         fixture = new RawStartupFixture('unrecoverable', 1800);
         await fixture.initialize();
         const error = await fixture.start().then(
@@ -194,33 +204,26 @@ suite('Raw Kernel Startup Recovery', function () {
         await fixture.firstCell();
     });
 
-    test('Review regression restart joins callers while willRestart hooks are pending', async () => {
+    test('a newer restart supersedes one waiting for willRestart hooks', async () => {
         fixture = new RawStartupFixture('none');
         fixture.startupCommands.push('review-restart-command');
         await fixture.initialize();
         await fixture.start();
 
         const hookEntered = createDeferred<void>();
-        const duplicateHookEntered = createDeferred<void>();
         const releaseHook = createDeferred<void>();
         let willRestartCalls = 0;
         let didStartCalls = 0;
-        let restartCompletedCalls = 0;
         let restartedEvents = 0;
         fixture.kernel.addHook('willRestart', async () => {
             willRestartCalls += 1;
             if (willRestartCalls === 1) {
                 hookEntered.resolve();
-            } else {
-                duplicateHookEntered.resolve();
+                await releaseHook.promise;
             }
-            await releaseHook.promise;
         });
         fixture.kernel.addHook('didStart', async () => {
             didStartCalls += 1;
-        });
-        fixture.kernel.addHook('restartCompleted', async () => {
-            restartCompletedCalls += 1;
         });
         fixture.kernel.onRestarted(() => (restartedEvents += 1));
 
@@ -237,33 +240,24 @@ suite('Raw Kernel Startup Recovery', function () {
             )
         );
         const second = fixture.kernel.restart().then(
-            () => undefined,
+            () => true,
             (error) => error
         );
-
         try {
-            assert.isUndefined(
-                await raceTimeout(
-                    500,
-                    duplicateHookEntered.promise.then(() => true)
-                ),
-                'A joining restart reran the willRestart hooks'
-            );
+            assert.instanceOf(await raceTimeout(4000, first), CancellationError);
+            assert.isTrue(await raceTimeout(4000, second));
         } finally {
             releaseHook.resolve();
-            await raceTimeout(4000, Promise.all([first, second]));
         }
-
-        assert.deepEqual(await raceTimeout(4000, Promise.all([first, second])), [undefined, undefined]);
-        assert.strictEqual(willRestartCalls, 1);
+        assert.strictEqual(willRestartCalls, 2);
         assert.strictEqual(didStartCalls, 1);
-        assert.strictEqual(restartCompletedCalls, 1);
         assert.strictEqual(restartedEvents, 1);
         assert.strictEqual(fixture.launches, baselineLaunches + 1);
         assert.strictEqual(fixture.executionCount('review-restart-command'), baselineCommands + 1);
+        await fixture.firstCell();
     });
 
-    test('Review regression restart joins callers through a deferred transport restart', async () => {
+    test('a newer restart shares an in-flight transport but supersedes initialization', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
         await fixture.start();
@@ -276,6 +270,14 @@ suite('Raw Kernel Startup Recovery', function () {
         fixture.kernel.onRestarted(() => (restartedEvents += 1));
         const baselineLaunches = fixture.launches;
         const transport = fixture.deferNextLaunch();
+        const secondHookEntered = createDeferred<void>();
+        let hookCalls = 0;
+        fixture.kernel.addHook('willRestart', async () => {
+            hookCalls += 1;
+            if (hookCalls === 2) {
+                secondHookEntered.resolve();
+            }
+        });
         const first = fixture.kernel.restart().then(
             () => undefined,
             (error) => error
@@ -290,12 +292,128 @@ suite('Raw Kernel Startup Recovery', function () {
             () => undefined,
             (error) => error
         );
-        transport.release();
+        try {
+            assert.isTrue(
+                await raceTimeout(
+                    2000,
+                    secondHookEntered.promise.then(() => true)
+                )
+            );
+            await sleep(20);
+        } finally {
+            transport.release();
+        }
 
-        assert.deepEqual(await raceTimeout(4000, Promise.all([first, second])), [undefined, undefined]);
+        const results = await raceTimeout(4000, Promise.all([first, second]));
+        assert.isDefined(results);
+        assert.instanceOf(results![0], CancellationError);
+        assert.isUndefined(results![1]);
         assert.strictEqual(fixture.launches, baselineLaunches + 1);
         assert.strictEqual(didStartCalls, 1);
         assert.strictEqual(restartedEvents, 1);
+        await fixture.firstCell();
+    });
+
+    test('a never-settling initialization does not wedge later restarts', async () => {
+        fixture = new RawStartupFixture('none');
+        await fixture.initialize();
+        await fixture.start();
+
+        const entered = createDeferred<void>();
+        const release = createDeferred<void>();
+        let calls = 0;
+        let restarted = 0;
+        fixture.kernel.addHook('didStart', async () => {
+            calls += 1;
+            if (calls === 1) {
+                entered.resolve();
+                await release.promise;
+            }
+        });
+        fixture.kernel.onRestarted(() => restarted++);
+        const first = fixture.kernel.restart().then(
+            () => undefined,
+            (error) => error
+        );
+        try {
+            assert.isTrue(
+                await raceTimeout(
+                    2000,
+                    entered.promise.then(() => true)
+                )
+            );
+            assert.isUndefined(
+                await raceTimeout(
+                    100,
+                    first.then(() => true)
+                )
+            );
+            const second = fixture.kernel.restart().then(
+                () => true,
+                (error) => error
+            );
+            assert.instanceOf(await raceTimeout(4000, first), CancellationError);
+            assert.isTrue(await raceTimeout(4000, second));
+            const session = fixture.kernel.session;
+            const peer = fixture.peer;
+            assert.isDefined(session);
+            await fixture.firstCell();
+            release.resolve();
+            await sleep(50);
+            assert.strictEqual(fixture.kernel.session, session);
+            assert.isFalse(peer.isDisposed);
+            assert.strictEqual(restarted, 1);
+            assert.strictEqual(fixture.startedEvents, 1);
+            await fixture.firstCell();
+        } finally {
+            release.resolve();
+        }
+    });
+
+    test('a superseding cold restart releases a stuck unpublished initializer', async () => {
+        fixture = new RawStartupFixture('none');
+        await fixture.initialize();
+        const entered = createDeferred<void>();
+        const release = createDeferred<void>();
+        let calls = 0;
+        let restarted = 0;
+        fixture.kernel.addHook('didStart', async () => {
+            calls += 1;
+            if (calls === 1) {
+                entered.resolve();
+                await release.promise;
+            }
+        });
+        fixture.kernel.onRestarted(() => restarted++);
+        const first = fixture.kernel.restart().then(
+            () => undefined,
+            (error) => error
+        );
+        try {
+            assert.isTrue(
+                await raceTimeout(
+                    2000,
+                    entered.promise.then(() => true)
+                )
+            );
+            const second = fixture.kernel.restart().then(
+                () => true,
+                (error) => error
+            );
+            assert.instanceOf(await raceTimeout(4000, first), CancellationError);
+            assert.isTrue(await raceTimeout(4000, second));
+            const session = fixture.kernel.session;
+            const peer = fixture.peer;
+            await fixture.firstCell();
+            release.resolve();
+            await sleep(50);
+            assert.strictEqual(fixture.kernel.session, session);
+            assert.isFalse(peer.isDisposed);
+            assert.strictEqual(fixture.startedEvents, 1);
+            assert.strictEqual(restarted, 1);
+        } finally {
+            release.resolve();
+        }
     });
 
     test('restart rejects and disposes the generation when its owned raw session dies during initialization', async () => {
@@ -348,23 +466,28 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.isUndefined(fixture.kernel.session);
     });
 
-    test('Review regression restart joins the awaited post-initialized handler after readiness', async () => {
+    test('a never-settling post-start waitUntil does not wedge later restarts', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
         await fixture.start();
 
-        const handlerEntered = createDeferred<void>();
-        const releaseHandler = createDeferred<void>();
+        const entered = createDeferred<void>();
+        const release = createDeferred<void>();
         let postInitializedEvents = 0;
+        let restarted = 0;
+        fixture.kernel.onRestarted(() => restarted++);
         fixture.kernel.onPostInitialized((event) => {
             postInitializedEvents += 1;
+            const firstEvent = postInitializedEvents === 1;
             event.waitUntil(
                 (async () => {
                     await fixture.kernel.restarting;
                     await fixture.kernel.start(new StartOptions(false, true));
                     await fixture.executeCell('review-post-initialized-handler');
-                    handlerEntered.resolve();
-                    await releaseHandler.promise;
+                    if (firstEvent) {
+                        entered.resolve();
+                        await release.promise;
+                    }
                 })()
             );
         });
@@ -373,50 +496,112 @@ suite('Raw Kernel Startup Recovery', function () {
             () => undefined,
             (error) => error
         );
-        assert.isTrue(
-            await raceTimeout(
-                2000,
-                handlerEntered.promise.then(() => true)
-            )
-        );
-        const nextLaunch = fixture.deferNextLaunch();
-        const second = fixture.kernel.restart().then(
+        try {
+            assert.isTrue(
+                await raceTimeout(
+                    2000,
+                    entered.promise.then(() => true)
+                )
+            );
+            assert.isUndefined(
+                await raceTimeout(
+                    100,
+                    first.then(() => true)
+                )
+            );
+            const second = fixture.kernel.restart().then(
+                () => true,
+                (error) => error
+            );
+            assert.instanceOf(await raceTimeout(4000, first), CancellationError);
+            assert.isTrue(await raceTimeout(4000, second));
+            const session = fixture.kernel.session;
+            const peer = fixture.peer;
+            await fixture.firstCell();
+            release.resolve();
+            await sleep(50);
+            assert.strictEqual(fixture.kernel.session, session);
+            assert.isFalse(peer.isDisposed);
+            assert.strictEqual(postInitializedEvents, 2);
+            assert.strictEqual(restarted, 2);
+            assert.strictEqual(fixture.executionCount('review-post-initialized-handler'), 2);
+            assert.isFalse(fixture.kernel.isPostInitializedInProgress);
+        } finally {
+            release.resolve();
+        }
+    });
+
+    test('a late post-start completion does not clear a newer handler in progress', async () => {
+        fixture = new RawStartupFixture('none');
+        await fixture.initialize();
+        await fixture.start();
+        const entered = [createDeferred<void>(), createDeferred<void>()];
+        const release = [createDeferred<void>(), createDeferred<void>()];
+        let count = 0;
+        fixture.kernel.onPostInitialized((event) => {
+            const index = count++;
+            entered[index].resolve();
+            event.waitUntil(release[index].promise);
+        });
+        const first = fixture.kernel.restart().then(
             () => undefined,
             (error) => error
         );
         try {
-            assert.isUndefined(
+            assert.isTrue(
                 await raceTimeout(
-                    1000,
-                    nextLaunch.entered.then(() => true)
-                ),
-                'A caller arriving during post-initialization started another restart'
+                    2000,
+                    entered[0].promise.then(() => true)
+                )
             );
-            const ordinary = fixture.executeCellThroughStartGate('review-ordinary-after-post-initialization').then(
+            const second = fixture.kernel.restart().then(
                 () => true,
                 (error) => error
             );
-            assert.isUndefined(
-                await raceTimeout(500, ordinary),
-                'Ordinary code bypassed the held post-initialization handler'
+            assert.instanceOf(await raceTimeout(4000, first), CancellationError);
+            assert.isTrue(
+                await raceTimeout(
+                    4000,
+                    entered[1].promise.then(() => true)
+                )
             );
-            releaseHandler.resolve();
-            assert.isTrue(await raceTimeout(2000, ordinary));
+            release[0].resolve();
+            await sleep(20);
+            assert.isTrue(fixture.kernel.isPostInitializedInProgress);
+            release[1].resolve();
+            assert.isTrue(await raceTimeout(4000, second));
+            await fixture.firstCell();
         } finally {
-            nextLaunch.release();
-            releaseHandler.resolve();
-            await raceTimeout(4000, Promise.all([first, second]));
+            release.forEach((item) => item.resolve());
         }
+    });
 
-        assert.deepEqual(await raceTimeout(4000, Promise.all([first, second])), [undefined, undefined]);
-        assert.strictEqual(postInitializedEvents, 1);
-        assert.strictEqual(fixture.executionCount('review-post-initialized-handler'), 1);
-        assert.strictEqual(fixture.executionCount('review-ordinary-after-post-initialization'), 1);
-        const commands = fixture.peer.executionCodes;
-        assert.isBelow(
-            commands.indexOf('review-post-initialized-handler'),
-            commands.indexOf('review-ordinary-after-post-initialization')
+    test('disposing releases a restart blocked in a post-start handler', async () => {
+        fixture = new RawStartupFixture('none');
+        await fixture.initialize();
+        await fixture.start();
+        const entered = createDeferred<void>();
+        const release = createDeferred<void>();
+        fixture.kernel.onPostInitialized((event) => {
+            entered.resolve();
+            event.waitUntil(release.promise);
+        });
+        const restart = fixture.kernel.restart().then(
+            () => undefined,
+            (error) => error
         );
+        try {
+            assert.isTrue(
+                await raceTimeout(
+                    2000,
+                    entered.promise.then(() => true)
+                )
+            );
+            await fixture.kernel.dispose();
+            assert.instanceOf(await raceTimeout(4000, restart), CancellationError);
+        } finally {
+            release.resolve();
+        }
     });
 
     test('Review regression restart cancellation during transport rejects without a success event', async () => {
@@ -455,69 +640,56 @@ suite('Raw Kernel Startup Recovery', function () {
         );
     });
 
-    test('Review regression restart joins a failed attempt and permits a fresh retry', async () => {
+    test('a failed superseding restart permits a fresh retry', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
         await fixture.start();
 
-        const hookEntered = createDeferred<void>();
-        const duplicateHookEntered = createDeferred<void>();
-        const releaseHook = createDeferred<void>();
+        const entered = createDeferred<void>();
+        const release = createDeferred<void>();
         const expectedFailure = new Error('review restart failure');
         let shouldFail = true;
         let hooks = 0;
         fixture.kernel.addHook('willRestart', async () => {
             hooks += 1;
             if (hooks === 1) {
-                hookEntered.resolve();
-            } else {
-                duplicateHookEntered.resolve();
+                entered.resolve();
+                await release.promise;
             }
-            await releaseHook.promise;
             if (shouldFail) {
                 throw expectedFailure;
             }
         });
-
         const first = fixture.kernel.restart().then(
             () => undefined,
             (error) => error
         );
-        assert.isTrue(
-            await raceTimeout(
-                2000,
-                hookEntered.promise.then(() => true)
-            )
-        );
-        const second = fixture.kernel.restart().then(
-            () => undefined,
-            (error) => error
-        );
         try {
-            assert.isUndefined(
+            assert.isTrue(
                 await raceTimeout(
-                    500,
-                    duplicateHookEntered.promise.then(() => true)
-                ),
-                'A joining failed restart reran the willRestart hooks'
-            );
-        } finally {
-            releaseHook.resolve();
-            await raceTimeout(4000, Promise.all([first, second]));
-        }
-
-        assert.deepEqual(await raceTimeout(4000, Promise.all([first, second])), [expectedFailure, expectedFailure]);
-        assert.strictEqual(hooks, 1);
-        shouldFail = false;
-        assert.isTrue(
-            await raceTimeout(
-                4000,
-                fixture.kernel.restart().then(
-                    () => true,
-                    (error) => error
+                    2000,
+                    entered.promise.then(() => true)
                 )
-            )
-        );
+            );
+            const second = fixture.kernel.restart().then(
+                () => undefined,
+                (error) => error
+            );
+            assert.instanceOf(await raceTimeout(4000, first), CancellationError);
+            assert.strictEqual(await raceTimeout(4000, second), expectedFailure);
+            release.resolve();
+            shouldFail = false;
+            assert.isTrue(
+                await raceTimeout(
+                    4000,
+                    fixture.kernel.restart().then(() => true)
+                )
+            );
+            await fixture.firstCell();
+        } finally {
+            release.resolve();
+        }
+        assert.strictEqual(hooks, 3);
     });
 
     test('Review regression widget detects a signed post-restart message after the startup token is cancelled', async () => {

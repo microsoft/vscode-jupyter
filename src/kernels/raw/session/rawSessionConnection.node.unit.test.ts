@@ -213,7 +213,8 @@ suite('Raw Session & Raw Kernel Connection', () => {
             Uri.file(''),
             kernelConnectionMetadata,
             launchTimeout,
-            'notebook'
+            'notebook',
+            false
         );
     });
 

@@ -2497,6 +2497,42 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
+     * Sent once per eligible raw Python kernel start describing the startup-recovery outcome.
+     */
+    [Telemetry.RawKernelStartupRecovery]: TelemetryEventInfo<
+        {
+            /**
+             * Number of fresh-peer recovery probes sent during startup (0 when the kernel started healthily).
+             */
+            probeCount: number;
+            /**
+             * Outcome of startup recovery.
+             */
+            outcome: 'healthy' | 'recovered' | 'timeout' | 'cancelled' | 'failed';
+        } & DurationMeasurement &
+            ResourceSpecificTelemetryProperties
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'N/A',
+        tags: ['KernelStartup'],
+        measures: {
+            ...commonClassificationForDurationProperties(),
+            probeCount: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth',
+                isMeasurement: true
+            }
+        },
+        properties: {
+            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
+            outcome: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
+    /**
      * Sent to measure time taken to spawn the raw kernel process.
      */
     [Telemetry.RawKernelProcessLaunch]: TelemetryEventInfo<DurationMeasurement> = {

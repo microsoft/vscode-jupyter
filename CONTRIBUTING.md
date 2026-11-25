@@ -132,8 +132,9 @@ cleanup after a failing assertion is never counted as a successful recovery.
 
 Set `RAW_KERNEL_STARTUP_RESULTS` to a private directory to preserve sanitized
 fixture states and resource outcomes. Connection files and signing keys are not
-included. The Windows `raw_kernel_startup_windows` CI job runs the command twenty
-times in fresh processes, using the existing Mocha runner without forced exit.
+included. The Windows `raw_kernel_startup_windows` CI job runs the native contract
+command across 20 iterations (18 within a single process plus two additional
+cold-process runs), using the existing Mocha runner without forced exit.
 Keep diagnostic profiles and comparison variants isolated from normal user
 profiles and other worktrees.
 

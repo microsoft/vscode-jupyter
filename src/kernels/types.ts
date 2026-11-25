@@ -606,11 +606,6 @@ export enum InterruptResult {
 export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
     extends Session.ISessionConnection {
     readonly kind: T;
-    /**
-     * Startup-recovery coordinator for this session's current kernel, when one is active (local raw kernels only).
-     * Exposed as a typed accessor so callers avoid reaching through the global `KernelSocketMap`.
-     */
-    readonly startup?: IKernelStartup;
     readonly status: KernelMessage.Status;
     readonly onDidKernelSocketChange: Event<void>;
     onDidDispose: Event<void>;
@@ -620,7 +615,13 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
 }
 
 export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {}
-export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
+export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {
+    /**
+     * Startup-recovery coordinator for this raw session's current kernel, when one is active.
+     * Exposed as a typed accessor so callers avoid reaching through the global `KernelSocketMap`.
+     */
+    readonly startup?: IKernelStartup;
+}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
 export interface IJupyterKernelSpec {
@@ -753,7 +754,6 @@ export interface IKernelStartup {
     readonly error?: Error;
     run<T>(operation: (token: CancellationToken) => Promise<T>, token: CancellationToken): Promise<T>;
     complete(ready: () => Promise<unknown>, token: CancellationToken): Promise<void>;
-    discardRequest(id: string): void;
     dispose(): void;
 }
 

@@ -121,7 +121,8 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         private readonly workingDirectory: Uri,
         private readonly launchTimeout: number,
 
-        private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata
+        private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata,
+        private readonly enableStartupRecovery: boolean
     ) {
         this.infoDeferred.promise.catch(noop);
         this.name = getNameOfKernelConnection(kernelConnectionMetadata) || 'python3';
@@ -203,7 +204,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 this.clientId,
                 this.username,
                 this.model,
-                this.launchTimeout
+                this.launchTimeout,
+                this.enableStartupRecovery,
+                this.resource
             );
             this.kernelProcess = result.kernelProcess;
             this.realKernel = result.realKernel;
@@ -705,7 +708,9 @@ function newRawKernel(
     clientId: string,
     username: string,
     model: Kernel.IModel,
-    launchTimeout: number
+    launchTimeout: number,
+    enableStartupRecovery: boolean,
+    resource: Resource
 ) {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize =
@@ -719,8 +724,18 @@ function newRawKernel(
             super(
                 kernelProcess.connection,
                 jupyterLabSerialize.serialize,
-                isPythonKernelConnection(kernelProcess.kernelConnectionMetadata)
-                    ? { timeout: launchTimeout, metadata: kernelProcess.kernelConnectionMetadata }
+                enableStartupRecovery && isPythonKernelConnection(kernelProcess.kernelConnectionMetadata)
+                    ? {
+                          timeout: launchTimeout,
+                          metadata: kernelProcess.kernelConnectionMetadata,
+                          report: (info) =>
+                              sendKernelTelemetryEvent(
+                                  resource,
+                                  Telemetry.RawKernelStartupRecovery,
+                                  { duration: info.durationMs, probeCount: info.probeCount },
+                                  { outcome: info.outcome }
+                              )
+                      }
                     : undefined
             );
             socketInstance = this;

@@ -427,6 +427,11 @@ export enum Telemetry {
     IPyWidgetRenderFailure = 'DS_INTERNAL.IPYWIDGET_RENDER_FAILURE',
     IPyWidgetUnhandledMessage = 'DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE',
     RawKernelInfoResponse = 'DS_INTERNAL.RAWKERNEL_INFO_RESPONSE',
+    /**
+     * Sent once per eligible raw Python kernel start describing the startup-recovery outcome
+     * (healthy/recovered/timeout/cancelled/failed) and the number of fresh-peer recovery probes sent.
+     */
+    RawKernelStartupRecovery = 'DS_INTERNAL.RAWKERNEL_STARTUP_RECOVERY',
     RawKernelSessionStartNoIpykernel = 'DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
     RawKernelSessionShutdown = 'DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN',

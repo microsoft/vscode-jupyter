@@ -4,6 +4,7 @@
 import { injectable, inject } from 'inversify';
 import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { IPlatformService } from '../../../platform/common/platform/types';
 import { IConfigurationService } from '../../../platform/common/types';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import {
@@ -24,7 +25,8 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
-        @inject(IKernelWorkingDirectory) private readonly workingDirectoryComputer: IKernelWorkingDirectory
+        @inject(IKernelWorkingDirectory) private readonly workingDirectoryComputer: IKernelWorkingDirectory,
+        @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {}
 
     public async create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession> {
@@ -50,7 +52,8 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
             workingDirectory,
             options.kernelConnection as LocalKernelConnectionMetadata,
             launchTimeout,
-            (options.resource?.path || '').toLowerCase().endsWith('.ipynb') ? 'notebook' : 'console'
+            (options.resource?.path || '').toLowerCase().endsWith('.ipynb') ? 'notebook' : 'console',
+            this.platformService.isWindows
         );
         try {
             await raceCancellationError(options.token, session.startKernel(options));

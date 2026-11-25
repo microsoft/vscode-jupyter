@@ -2000,7 +2000,36 @@
      ]
    }
  */
-// (147). Telemetry.RunTest (DS_INTERNAL.RUNTEST)
+// (147). Telemetry.RawKernelStartupRecovery (DS_INTERNAL.RAWKERNEL_STARTUP_RECOVERY)
+// Sent once per eligible raw Python kernel start describing the startup-recovery outcome.
+/* __GDPR__
+   "DS_INTERNAL.RAWKERNEL_STARTUP_RECOVERY" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "outcome": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Outcome of startup recovery.","owner":"donjayamanne"},
+     "probeCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Number of fresh-peer recovery probes sent during startup (0 when the kernel started healthily).","owner":"donjayamanne","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+// (148). Telemetry.RunTest (DS_INTERNAL.RUNTEST)
 // A automated test has been run
 /* __GDPR__
    "DS_INTERNAL.RUNTEST" : {
@@ -2015,7 +2044,7 @@
      ]
    }
  */
-// (148). Telemetry.ShiftEnterBannerShown (DS_INTERNAL.SHIFTENTER_BANNER_SHOWN)
+// (149). Telemetry.ShiftEnterBannerShown (DS_INTERNAL.SHIFTENTER_BANNER_SHOWN)
 // Information banner displayed to give the user the option to configure shift+enter for the Interactive Window.
 /* __GDPR__
    "DS_INTERNAL.SHIFTENTER_BANNER_SHOWN" : {
@@ -2025,7 +2054,7 @@
      ]
    }
  */
-// (149). Telemetry.PandasNotInstalled (DS_INTERNAL.SHOW_DATA_NO_PANDAS)
+// (150). Telemetry.PandasNotInstalled (DS_INTERNAL.SHOW_DATA_NO_PANDAS)
 // User tried to open the data viewer and Pandas package was not installed.
 // Note: Not a failure state, as we prompt for install after this.
 /* __GDPR__
@@ -2036,7 +2065,7 @@
      ]
    }
  */
-// (150). Telemetry.PandasInstallCanceled (DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED)
+// (151). Telemetry.PandasInstallCanceled (DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED)
 // When opening the data viewer the user was prompted to install / upgrade
 // pandas and choose to cancel the operation.
 /* __GDPR__
@@ -2047,7 +2076,7 @@
      ]
    }
  */
-// (151). Telemetry.PandasOK (DS_INTERNAL.SHOW_DATA_PANDAS_OK)
+// (152). Telemetry.PandasOK (DS_INTERNAL.SHOW_DATA_PANDAS_OK)
 // When opening the data viewer the version of Pandas installed was ok.
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_OK" : {
@@ -2057,7 +2086,7 @@
      ]
    }
  */
-// (152). Telemetry.PandasTooOld (DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD)
+// (153). Telemetry.PandasTooOld (DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD)
 // When opening the data viewer the version of Pandas installed was too old.
 /* __GDPR__
    "DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD" : {
@@ -2067,7 +2096,7 @@
      ]
    }
  */
-// (153). Telemetry.SwitchKernel (DS_INTERNAL.SWITCH_KERNEL)
+// (154). Telemetry.SwitchKernel (DS_INTERNAL.SWITCH_KERNEL)
 // Triggered when the kernel selection changes (note: This can also happen automatically when a notebook is opened).
 // WARNING: Due to changes in VS Code, this isn't necessarily a user action, hence difficult to tell if the user changed it or it changed automatically.
 /* __GDPR__
@@ -2095,7 +2124,7 @@
      ]
    }
  */
-// (154). Telemetry.VariableExplorerFetchTime (DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME)
+// (155). Telemetry.VariableExplorerFetchTime (DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME)
 // How long did it take for a single variable request to be resolved.
 /* __GDPR__
    "DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME" : {
@@ -2105,7 +2134,7 @@
      ]
    }
  */
-// (155). Telemetry.VariableExplorerVariableCount (DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT)
+// (156). Telemetry.VariableExplorerVariableCount (DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT)
 // Count how many variables were in a variable request.
 /* __GDPR__
    "DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT" : {
@@ -2116,7 +2145,7 @@
      ]
    }
  */
-// (156). Telemetry.VSCNotebookCellTranslationFailed (DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED)
+// (157). Telemetry.VSCNotebookCellTranslationFailed (DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED)
 // We've failed to translate a Jupyter cell output for serialization into a Notebook cell.
 /* __GDPR__
    "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED" : {
@@ -2127,7 +2156,7 @@
      ]
    }
  */
-// (157). EventName.ENVFILE_VARIABLE_SUBSTITUTION (ENVFILE_VARIABLE_SUBSTITUTION)
+// (158). EventName.ENVFILE_VARIABLE_SUBSTITUTION (ENVFILE_VARIABLE_SUBSTITUTION)
 // Telemetry event sent when substituting Environment variables to calculate value of variables.
 // E.g. user has a a .env file with tokens that need to be replaced with env variables.
 // such as an env file having the variable `${HOME}`.
@@ -2140,7 +2169,7 @@
      ]
    }
  */
-// (158). EventName.ENVFILE_WORKSPACE (ENVFILE_WORKSPACE)
+// (159). EventName.ENVFILE_WORKSPACE (ENVFILE_WORKSPACE)
 // Telemetry event sent when an environment file is detected in the workspace.
 /* __GDPR__
    "ENVFILE_WORKSPACE" : {
@@ -2150,7 +2179,7 @@
      ]
    }
  */
-// (159). EventName.EXTENSION_LOAD (EXTENSION.LOAD)
+// (160). EventName.EXTENSION_LOAD (EXTENSION.LOAD)
 // Telemetry event sent with perf measures related to activation and loading of extension.
 /* __GDPR__
    "EXTENSION.LOAD" : {
@@ -2163,7 +2192,7 @@
      ]
    }
  */
-// (160). Telemetry.AmbiguousGlobalKernelSpec (GLOBAL_PYTHON_KERNELSPEC)
+// (161). Telemetry.AmbiguousGlobalKernelSpec (GLOBAL_PYTHON_KERNELSPEC)
 // We have a Python Kernel spec without fully qualified path of Python env.
 // We have no idea how to start these kernels if the user has more than one Python env.
 //
@@ -2187,7 +2216,7 @@
      ]
    }
  */
-// (161). EventName.HASHED_PACKAGE_NAME (HASHED_PACKAGE_NAME)
+// (162). EventName.HASHED_PACKAGE_NAME (HASHED_PACKAGE_NAME)
 // Telemetry event sent with hash of an imported python package.
 // Used to detect the popularity of a package, that would help determine which packages
 // need to be prioritized when resolving issues with intellisense or supporting similar issues related to a (known) specific package.
@@ -2202,7 +2231,7 @@
      ]
    }
  */
-// (162). Telemetry.InvokeTool (InvokeTool)
+// (163). Telemetry.InvokeTool (InvokeTool)
 // Telemetry sent with details of LM toolcalls.
 /* __GDPR__
    "InvokeTool" : {
@@ -2214,7 +2243,7 @@
      ]
    }
  */
-// (163). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX)
+// (164). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX)
 // Telemetry event sent when user opens the data viewer via the variable view and there is an error in doing so.
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX" : {
@@ -2224,7 +2253,7 @@
      ]
    }
  */
-// (164). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX)
+// (165). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX)
 // Telemetry event sent when user opens the data viewer via the variable view.
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX" : {
@@ -2234,7 +2263,7 @@
      ]
    }
  */
-// (165). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX)
+// (166). EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS (OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX)
 // Telemetry event sent when user opens the data viewer via the variable view and we successfully open the view.
 /* __GDPR__
    "OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX" : {
@@ -2244,7 +2273,7 @@
      ]
    }
  */
-// (166). Telemetry.PlotViewerWebviewLoaded (PLOTVIEWER.WEBVIEW_LOADED)
+// (167). Telemetry.PlotViewerWebviewLoaded (PLOTVIEWER.WEBVIEW_LOADED)
 // The Plot Viewer webview was loaded.
 /* __GDPR__
    "PLOTVIEWER.WEBVIEW_LOADED" : {

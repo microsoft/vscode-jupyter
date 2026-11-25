@@ -302,7 +302,8 @@ export class NativeStartupFixture {
                 Uri.file(this.root),
                 metadata,
                 this.timeout,
-                'notebook'
+                'notebook',
+                true
             );
             await this.session.startKernel(options);
             return new RawJupyterSessionWrapper(this.session, uri, metadata);

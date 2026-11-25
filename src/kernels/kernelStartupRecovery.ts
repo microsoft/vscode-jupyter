@@ -4,6 +4,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { CancellationError, CancellationToken, CancellationTokenSource } from 'vscode';
 import { createDeferred } from '../platform/common/utils/async';
+import { isCancellationError } from '../platform/common/cancellation';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { IKernelStartup } from './types';
@@ -16,6 +17,9 @@ export class KernelStartupRecovery implements IKernelStartup {
     private readonly requests = new Map<string, { reply: boolean; idle: boolean; acknowledged: boolean }>();
     private readonly auxiliary = new Set<string>();
     private remaining: number;
+    private readonly interval: number;
+    private eligibleSince?: number;
+    private lastAttempt = -Infinity;
     private lastUpdate = 0;
     private charging = false;
     private readonly monitoring: Promise<void>;
@@ -23,6 +27,7 @@ export class KernelStartupRecovery implements IKernelStartup {
     private probing = false;
     private attempts = 0;
     private failure?: Error;
+    private reported = false;
 
     public get token() {
         return this.cancellation.token;
@@ -38,10 +43,16 @@ export class KernelStartupRecovery implements IKernelStartup {
     constructor(
         timeout: number,
         private readonly timeoutError: Error,
-        private readonly probe: (token: CancellationToken) => Promise<void>
+        private readonly probe: (token: CancellationToken) => Promise<void>,
+        private readonly report?: (info: {
+            probeCount: number;
+            durationMs: number;
+            outcome: 'healthy' | 'recovered' | 'timeout' | 'cancelled' | 'failed';
+        }) => void
     ) {
         this.failed.promise.catch(noop);
         this.remaining = timeout;
+        this.interval = Math.max(1, Math.min(500, timeout / 2));
         this.lastUpdate = this.clock.elapsedTime;
         this.monitoring = this.monitor().catch((error) => {
             if (!this.stopped && !this.failure) {
@@ -113,11 +124,6 @@ export class KernelStartupRecovery implements IKernelStartup {
         this.notify();
     }
 
-    public discardRequest(id: string) {
-        this.requests.delete(id);
-        this.notify();
-    }
-
     public fail(error: Error) {
         if (this.stopped || this.failure) {
             return;
@@ -125,7 +131,25 @@ export class KernelStartupRecovery implements IKernelStartup {
         this.failure = error;
         this.failed.reject(error);
         this.cancellation.cancel();
+        this.finalize();
         this.notify();
+    }
+
+    private finalize() {
+        if (this.reported) {
+            return;
+        }
+        this.reported = true;
+        const outcome = this.failure
+            ? this.failure === this.timeoutError
+                ? 'timeout'
+                : isCancellationError(this.failure)
+                ? 'cancelled'
+                : 'failed'
+            : this.attempts > 0
+            ? 'recovered'
+            : 'healthy';
+        this.report?.({ probeCount: this.attempts, durationMs: this.clock.elapsedTime, outcome });
     }
 
     public async run<T>(operation: (token: CancellationToken) => Promise<T>, parent: CancellationToken): Promise<T> {
@@ -175,14 +199,24 @@ export class KernelStartupRecovery implements IKernelStartup {
         while (!this.stopped && !this.failure) {
             await this.wait(1000);
             this.check();
+            this.updateBudget();
             if ([...this.requests.values()].some((request) => request.acknowledged && !request.idle)) {
                 continue;
             }
             if (!this.requests.size && !this.auxiliary.size) {
                 continue;
             }
+            const now = this.clock.elapsedTime;
+            if (
+                this.eligibleSince === undefined ||
+                now - this.eligibleSince < this.interval ||
+                now - this.lastAttempt < this.interval
+            ) {
+                continue;
+            }
             this.probing = true;
             this.attempts += 1;
+            this.lastAttempt = now;
             try {
                 await this.probe(this.token);
             } finally {
@@ -234,7 +268,13 @@ export class KernelStartupRecovery implements IKernelStartup {
         const pausedByAck = states.some((request) => request.acknowledged && !request.idle);
         const unacknowledged = states.some((request) => !request.acknowledged);
         const pendingAuxiliary = this.auxiliary.size > 0;
-        this.charging = !pausedByAck && (unacknowledged || pendingAuxiliary);
+        const eligible = !pausedByAck && (unacknowledged || pendingAuxiliary);
+        if (eligible && this.eligibleSince === undefined) {
+            this.eligibleSince = now;
+        } else if (!eligible) {
+            this.eligibleSince = undefined;
+        }
+        this.charging = eligible;
     }
 
     private notify() {
@@ -246,6 +286,7 @@ export class KernelStartupRecovery implements IKernelStartup {
     private stop() {
         this.stopped = true;
         this.cancellation.cancel();
+        this.finalize();
         this.notify();
     }
 

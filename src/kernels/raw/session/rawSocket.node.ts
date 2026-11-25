@@ -59,7 +59,15 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     constructor(
         private connection: IKernelConnection,
         private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
-        startup?: { timeout: number; metadata: LocalKernelConnectionMetadata }
+        startup?: {
+            timeout: number;
+            metadata: LocalKernelConnectionMetadata;
+            report?: (info: {
+                probeCount: number;
+                durationMs: number;
+                outcome: 'healthy' | 'recovered' | 'timeout' | 'cancelled' | 'failed';
+            }) => void;
+        }
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
@@ -67,7 +75,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             this.startup = new KernelStartupRecovery(
                 startup.timeout,
                 new KernelConnectionTimeoutError(startup.metadata),
-                (token) => this.probeStartup(token)
+                (token) => this.probeStartup(token),
+                startup.report
             );
         }
     }
