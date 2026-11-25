@@ -890,27 +890,39 @@ abstract class BaseKernel implements IBaseKernel {
     }
 
     private async initializeSession(session: IKernelSession | undefined, token: CancellationToken) {
+        // Startup recovery only applies to local raw Python kernels, and only when that session
+        // actually has a recovery coordinator attached (currently Windows only — see
+        // IRawKernelSession.startup / KernelStartupRecovery). For every other case there is nothing to
+        // supervise, so initialize normally and bail out early, keeping the recovery path below flat
+        // and easy to follow.
         const startup =
             session?.kind === 'localRaw' && isPythonKernelConnection(this.kernelConnectionMetadata)
                 ? session.startup
                 : undefined;
-        if (startup && session) {
-            await startup.superviseInitialization(
-                (startupToken) => this.initializeAfterStart(session, startupToken, startup),
-                token
-            );
-            await startup.complete(async () => {
-                const info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento, {
-                    requireFresh: true,
-                    token: startup.token
-                });
-                Cancellation.throwIfCanceled(startup.token);
-                Cancellation.throwIfCanceled(token);
-                this._info = info;
-            }, token);
-        } else {
+        if (!session || !startup) {
             await this.initializeAfterStart(session, token);
+            Cancellation.throwIfCanceled(token);
+            return;
         }
+
+        // From here on: a local raw Python kernel with an active startup-recovery coordinator.
+        // Phase 1 — run the main initialization under the recovery budget, so a kernel that silently
+        // missed the startup handshake gets nudged (or the attempt aborted) instead of hanging.
+        await startup.superviseInitialization(
+            (startupToken) => this.initializeAfterStart(session, startupToken, startup),
+            token
+        );
+        // Phase 2 — immediately confirm readiness with a FRESH kernel-info round-trip, then stop
+        // monitoring. We run it inside complete() so any probe fired during the check is accounted for.
+        await startup.complete(async () => {
+            const info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento, {
+                requireFresh: true,
+                token: startup.token
+            });
+            Cancellation.throwIfCanceled(startup.token);
+            Cancellation.throwIfCanceled(token);
+            this._info = info;
+        }, token);
         Cancellation.throwIfCanceled(token);
     }
 
@@ -1028,6 +1040,13 @@ abstract class BaseKernel implements IBaseKernel {
             const kernelInfo = tracker?.kernelInfo();
             try {
                 logger.debug('Requesting Kernel info');
+                // `startup` is the startup-recovery coordinator, present only while a Windows raw Python
+                // kernel is being recovered (otherwise undefined). When it is present we pass
+                // `requireFresh: true` so getKernelInfo ignores any cached/pending info and makes a brand
+                // new kernel_info round-trip: recovery is specifically about confirming that the *live*
+                // kernel now responds, so a stale cached reply must not be mistaken for readiness. We also
+                // pass `token` so a recovery timeout/cancellation aborts the request. Without recovery we
+                // pass undefined to keep the original lenient behaviour (cached info allowed, no throw).
                 const info = await getKernelInfo(
                     session,
                     this.kernelConnectionMetadata,

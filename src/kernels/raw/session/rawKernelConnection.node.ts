@@ -13,7 +13,7 @@ import {
     isPythonKernelConnection
 } from '../../../kernels/helpers';
 import { IKernelLauncher, IKernelProcess } from '../types';
-import { RawSocket } from './rawSocket.node';
+import { RawSocket, RawSocketStartupOptions } from './rawSocket.node';
 import { IKernelStartup, LocalKernelConnectionMetadata } from '../../types';
 import { Signal } from '@lumino/signaling';
 import type {
@@ -123,14 +123,14 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
 
         private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata,
         /**
-         * When true, this connection wraps post-start readiness in the startup-recovery coordinator
-         * (see {@link IKernelStartup}/`KernelStartupRecovery` and issue #17481): if the kernel appears
-         * stuck during startup, a fresh ZMQ peer re-sends a kernel_info_request to nudge a kernel that
-         * silently missed the IOPub startup handshake. When false, startup behaves exactly as before.
-         * Currently this is only enabled on Windows (the OS where the ipykernel 7 IOPub/XPUB race was
-         * observed); the caller decides the gate and passes the result here.
+         * True when running on Windows — the only OS where the ipykernel 7 IOPub/XPUB startup race
+         * (issue #17481) has been observed. When true (and the kernel is a Python kernel), post-start
+         * readiness is wrapped in the startup-recovery coordinator (see
+         * {@link IKernelStartup}/`KernelStartupRecovery`): if the kernel appears stuck during startup, a
+         * fresh ZMQ peer re-sends a kernel_info_request to nudge a kernel that silently missed the IOPub
+         * startup handshake. On other platforms this is false and startup behaves exactly as before.
          */
-        private readonly enableStartupRecovery: boolean
+        private readonly isWindows: boolean
     ) {
         this.infoDeferred.promise.catch(noop);
         this.name = getNameOfKernelConnection(kernelConnectionMetadata) || 'python3';
@@ -213,7 +213,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 this.username,
                 this.model,
                 this.launchTimeout,
-                this.enableStartupRecovery,
+                this.isWindows,
                 this.resource
             );
             this.kernelProcess = result.kernelProcess;
@@ -738,39 +738,41 @@ function newRawKernel(
     username: string,
     model: Kernel.IModel,
     launchTimeout: number,
-    enableStartupRecovery: boolean,
+    isWindows: boolean,
     resource: Resource
 ) {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize =
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
 
+    // Startup recovery is a Windows-only workaround for the ipykernel 7 IOPub/XPUB startup race
+    // (issue #17481), and only applies to Python kernels. Building the options behind this factory keeps
+    // the Windows-specific decision explicit and local: on any other platform (or for non-Python
+    // kernels) it returns undefined and the socket behaves exactly as before.
+    const createStartupRecoveryOptionsForWindows = (): RawSocketStartupOptions | undefined => {
+        if (!isWindows || !isPythonKernelConnection(kernelProcess.kernelConnectionMetadata)) {
+            return undefined;
+        }
+        return {
+            // No-progress startup budget + metadata for the timeout error, and a telemetry report hook.
+            timeout: launchTimeout,
+            metadata: kernelProcess.kernelConnectionMetadata,
+            report: (info) =>
+                sendKernelTelemetryEvent(
+                    resource,
+                    Telemetry.RawKernelStartupRecovery,
+                    { duration: info.durationMs, probeCount: info.probeCount },
+                    { outcome: info.outcome }
+                )
+        };
+    };
+
     // Dummy websocket we give to the underlying real kernel
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let socketInstance: RawSocket;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            // Enable startup recovery only when it is requested (Windows + Python gate, decided by the
-            // caller) and this is a Python kernel. When enabled we pass the launch timeout as the
-            // no-progress budget, the metadata for building a timeout error, and a telemetry `report`
-            // callback. Otherwise we pass `undefined`, and the socket behaves exactly as before.
-            super(
-                kernelProcess.connection,
-                jupyterLabSerialize.serialize,
-                enableStartupRecovery && isPythonKernelConnection(kernelProcess.kernelConnectionMetadata)
-                    ? {
-                          timeout: launchTimeout,
-                          metadata: kernelProcess.kernelConnectionMetadata,
-                          report: (info) =>
-                              sendKernelTelemetryEvent(
-                                  resource,
-                                  Telemetry.RawKernelStartupRecovery,
-                                  { duration: info.durationMs, probeCount: info.probeCount },
-                                  { outcome: info.outcome }
-                              )
-                      }
-                    : undefined
-            );
+            super(kernelProcess.connection, jupyterLabSerialize.serialize, createStartupRecoveryOptionsForWindows());
             socketInstance = this;
         }
     }

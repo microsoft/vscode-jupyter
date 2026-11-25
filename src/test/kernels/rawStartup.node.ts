@@ -343,7 +343,7 @@ export class RawStartupFixture {
     constructor(
         gate: StartupGate = 'execute',
         private readonly timeout = 6000,
-        private readonly enableStartupRecovery = true
+        private readonly isWindows = true
     ) {
         this.peer = new StartupPeer(gate);
         this.generations.push(this.peer);
@@ -388,7 +388,7 @@ export class RawStartupFixture {
             metadata,
             this.timeout,
             'notebook',
-            this.enableStartupRecovery
+            this.isWindows
         );
         const factory = mock<IKernelSessionFactory>();
         when(factory.create(anything())).thenCall(async (options: { token: CancellationToken }) => {
@@ -400,7 +400,7 @@ export class RawStartupFixture {
                     metadata,
                     this.timeout,
                     'notebook',
-                    this.enableStartupRecovery
+                    this.isWindows
                 );
             }
             await this.session.startKernel(options);

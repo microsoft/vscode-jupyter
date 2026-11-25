@@ -92,7 +92,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
         private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata,
         launchTimeout: number,
         public readonly type: 'notebook' | 'console',
-        enableStartupRecovery: boolean
+        isWindows: boolean
     ) {
         // Unique ID for this session instance
         this.id = generateUuid();
@@ -105,7 +105,7 @@ export class RawSessionConnection implements Session.ISessionConnection {
             workingDirectory,
             launchTimeout,
             kernelConnectionMetadata,
-            enableStartupRecovery
+            isWindows
         );
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
         this._kernel.iopubMessage.connect(this.onIOPubMessage, this);
