@@ -537,4 +537,159 @@ suite('Kernel restart lifecycle', function () {
             await fixture.dispose();
         }
     });
+
+    // Gateable `didStart` hook so a restart's initialization (which runs after the transport) can be
+    // held open to observe `kernel.restarting`. Each invocation blocks on its own release deferred.
+    function holdDidStart(kernel: Kernel, max = 4) {
+        const entered = Array.from({ length: max }, () => createDeferred<void>());
+        const release = Array.from({ length: max }, () => createDeferred<void>());
+        let index = 0;
+        const hook = kernel.addHook('didStart', async () => {
+            const current = index++;
+            entered[current]?.resolve();
+            await (release[current]?.promise ?? Promise.resolve());
+        });
+        return {
+            entered,
+            release,
+            dispose: () => hook.dispose(),
+            releaseAll: () => release.forEach((r) => r.resolve())
+        };
+    }
+
+    const settle = (promise: Promise<unknown>) =>
+        promise.then(
+            () => 'resolved' as const,
+            (error) => error
+        );
+
+    test('restarting stays pending until warm-restart initialization completes', async () => {
+        const fixture = new LiveRemoteKernelFixture();
+        let gate: ReturnType<typeof holdDidStart> | undefined;
+        try {
+            assert.isDefined(await raceTimeout(2000, fixture.start()));
+            gate = holdDidStart(fixture.kernel);
+
+            const restart = settle(fixture.kernel.restart());
+            // Transport has finished; initialization (didStart) is now running.
+            await raceTimeout(2000, gate.entered[0].promise);
+
+            const captured = settle(fixture.kernel.restarting);
+            assert.isUndefined(await raceTimeout(300, captured), 'restarting resolved before initialization completed');
+
+            gate.release[0].resolve();
+            assert.strictEqual(await raceTimeout(2000, restart), 'resolved');
+            assert.strictEqual(await raceTimeout(2000, captured), 'resolved');
+        } finally {
+            gate?.releaseAll();
+            gate?.dispose();
+            await fixture.dispose();
+        }
+    });
+
+    test('restarting rejects when the kernel is shut down mid warm-restart', async () => {
+        const fixture = new LiveRemoteKernelFixture();
+        let gate: ReturnType<typeof holdDidStart> | undefined;
+        try {
+            assert.isDefined(await raceTimeout(2000, fixture.start()));
+            gate = holdDidStart(fixture.kernel);
+
+            const restart = settle(fixture.kernel.restart());
+            await raceTimeout(2000, gate.entered[0].promise);
+
+            const captured = settle(fixture.kernel.restarting);
+            const shutdown = fixture.kernel.shutdown().then(() => true);
+            assert.instanceOf(await raceTimeout(2000, captured), CancellationError);
+
+            gate.releaseAll();
+            await raceTimeout(2000, restart);
+            assert.isTrue(await raceTimeout(2000, shutdown));
+        } finally {
+            gate?.releaseAll();
+            gate?.dispose();
+            await fixture.dispose();
+        }
+    });
+
+    test('restarting rejects when the kernel is disposed mid warm-restart', async () => {
+        const fixture = new LiveRemoteKernelFixture();
+        let gate: ReturnType<typeof holdDidStart> | undefined;
+        try {
+            assert.isDefined(await raceTimeout(2000, fixture.start()));
+            gate = holdDidStart(fixture.kernel);
+
+            const restart = settle(fixture.kernel.restart());
+            await raceTimeout(2000, gate.entered[0].promise);
+
+            const captured = settle(fixture.kernel.restarting);
+            const disposal = fixture.kernel.dispose().then(() => true);
+            assert.instanceOf(await raceTimeout(2000, captured), CancellationError);
+
+            gate.releaseAll();
+            await raceTimeout(2000, restart);
+            assert.isTrue(await raceTimeout(2000, disposal));
+        } finally {
+            gate?.releaseAll();
+            gate?.dispose();
+            await fixture.dispose();
+        }
+    });
+
+    test('restarting migrates to the superseding restart', async () => {
+        const fixture = new LiveRemoteKernelFixture();
+        let gate: ReturnType<typeof holdDidStart> | undefined;
+        try {
+            assert.isDefined(await raceTimeout(2000, fixture.start()));
+            gate = holdDidStart(fixture.kernel);
+
+            const restartA = settle(fixture.kernel.restart());
+            // Hold restart A inside its initialization.
+            await raceTimeout(2000, gate.entered[0].promise);
+            const captured = settle(fixture.kernel.restarting);
+
+            // Supersede A with B.
+            const restartB = settle(fixture.kernel.restart());
+            assert.instanceOf(await raceTimeout(2000, restartA), CancellationError);
+            // Let A's superseded initialization unwind.
+            gate.release[0].resolve();
+
+            // B now runs its own initialization; the shared gate must still be pending (migrated to B),
+            // not resolved by A's cancellation.
+            await raceTimeout(2000, gate.entered[1].promise);
+            assert.isUndefined(await raceTimeout(300, captured), 'restarting resolved before B completed');
+
+            gate.release[1].resolve();
+            assert.strictEqual(await raceTimeout(2000, restartB), 'resolved');
+            assert.strictEqual(await raceTimeout(2000, captured), 'resolved');
+        } finally {
+            gate?.releaseAll();
+            gate?.dispose();
+            await fixture.dispose();
+        }
+    });
+
+    test('a post-init handler observes restarting already resolved (no reentrancy deadlock)', async () => {
+        const fixture = new LiveRemoteKernelFixture();
+        try {
+            assert.isDefined(await raceTimeout(2000, fixture.start()));
+
+            let observed: 'resolved' | 'rejected' | 'pending' = 'pending';
+            const subscription = fixture.kernel.onPostInitialized((event) => {
+                event.waitUntil(
+                    (async () => {
+                        const result = await raceTimeout(200, settle(fixture.kernel.restarting));
+                        observed = result === undefined ? 'pending' : result === 'resolved' ? 'resolved' : 'rejected';
+                    })()
+                );
+            });
+            try {
+                assert.strictEqual(await raceTimeout(2000, settle(fixture.kernel.restart())), 'resolved');
+                assert.strictEqual(observed, 'resolved');
+            } finally {
+                subscription.dispose();
+            }
+        } finally {
+            await fixture.dispose();
+        }
+    });
 });

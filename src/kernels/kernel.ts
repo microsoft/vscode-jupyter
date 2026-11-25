@@ -29,7 +29,7 @@ import { splitLines } from '../platform/common/helpers';
 import { logger } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
-import { createDeferred, raceTimeout, raceTimeoutError } from '../platform/common/utils/async';
+import { createDeferred, raceTimeout, raceTimeoutError, type Deferred } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
@@ -209,8 +209,12 @@ abstract class BaseKernel implements IBaseKernel {
     private disposingPromise?: Promise<void>;
     private _interruptPromise?: Promise<InterruptResult>;
     private _restartPromise?: Promise<void>;
+    // Readiness gate for `restarting`: stays pending for the whole warm restart (through the readiness
+    // probe in initializeSession), not just the transport. Kept separate from `_restartPromise`, which is
+    // only transport coalescing. Settled by the owning (latest) restart attempt.
+    private _restartReady?: Deferred<void>;
     public get restarting() {
-        return this._restartPromise || Promise.resolve();
+        return this._restartReady?.promise ?? Promise.resolve();
     }
     constructor(
         public readonly id: string,
@@ -430,6 +434,16 @@ abstract class BaseKernel implements IBaseKernel {
                     // instead of starting a whole new one. Pending cells should have been cancelled by
                     // the caller. `_restartPromise` coalesces concurrent restarts onto one underlying
                     // session.restart() call.
+                    //
+                    // Open the readiness gate BEFORE calling restart(): the transport synchronously emits
+                    // 'restarting', which can start a superseding restart whose willRestart hook throws
+                    // synchronously; creating the gate first guarantees that attempt's finally can settle it
+                    // (otherwise the gate could be orphaned/pending forever). Reuse an existing gate so
+                    // waiters on a superseded attempt migrate to the latest one.
+                    if (!this._restartReady) {
+                        this._restartReady = createDeferred<void>();
+                        this._restartReady.promise.catch(noop);
+                    }
                     if (!this._restartPromise) {
                         this._restartPromise = restartSession.restart();
                         this._restartPromise.finally(() => (this._restartPromise = undefined)).catch(noop);
@@ -443,6 +457,15 @@ abstract class BaseKernel implements IBaseKernel {
                     // Cold path: the session died (or the previously pending start was cancelled
                     // above), so start fresh.
                     // start() already runs initialization, including the single-use raw coordinator.
+                    //
+                    // If we inherited a readiness gate from a superseded warm predecessor, release it here
+                    // (before start()) so its waiters migrate onto this fresh start — whose readiness is
+                    // gated by `_jupyterSessionPromise`. Releasing before start() also avoids a post-init
+                    // reentrancy deadlock. Only the owning (latest) attempt settles it.
+                    if (this._restartLifecycle === lifecycle && this._restartReady) {
+                        this._restartReady.resolve();
+                        this._restartReady = undefined;
+                    }
                     restartSession = await raceCancellationError(
                         lifecycle.token,
                         this.start(new DisplayOptions(false))
@@ -531,6 +554,14 @@ abstract class BaseKernel implements IBaseKernel {
             if (!session || session !== restartSession || this._session !== session) {
                 throw new CancellationError();
             }
+            // Readiness confirmed and we still own this session: release the restart gate now, BEFORE
+            // firing restarted/post-init. Post-init handlers call executeCode -> `restarting`, so the gate
+            // must already be resolved here or those reentrant handlers would deadlock. Only the owning
+            // (latest) attempt settles it.
+            if (this._restartLifecycle === lifecycle) {
+                this._restartReady?.resolve();
+                this._restartReady = undefined;
+            }
             this._onRestarted.fire();
             // Verify we are still the active restart (and still own this session) BEFORE firing the
             // didStart hooks, rather than firing them first and checking afterwards: once the hooks
@@ -548,6 +579,14 @@ abstract class BaseKernel implements IBaseKernel {
             // newer restart's progress UI. A newer restart replaces `_restartLifecycle`; shutdown/dispose
             // cancel it WITHOUT replacing it, so they still fire the completion cleanup.
             if (this._restartLifecycle === lifecycle) {
+                // If the readiness gate is still pending, this owning attempt did not reach the success
+                // release above (it failed, was cancelled, or shutdown/dispose cancelled the lifecycle).
+                // Reject waiters so a queued execution fails cleanly instead of running against a session
+                // that is being torn down. On success the gate was already resolved+cleared above.
+                if (this._restartReady) {
+                    this._restartReady.reject(new CancellationError());
+                    this._restartReady = undefined;
+                }
                 Promise.all(Array.from(this.hooks.get('restartCompleted') || new Set<Hook>()).map((h) => h())).catch(
                     noop
                 );
