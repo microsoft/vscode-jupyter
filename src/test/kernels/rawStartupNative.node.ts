@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// Real-process fixture for rawStartup.native.test.ts: a Python driver loads ipykernel,
+// exposes the queued-sender race and fd/POLLIN/execution probes, and exercises production startup.
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { createHash } from 'crypto';
 import * as fs from 'fs-extra';
@@ -35,6 +37,7 @@ import { logger } from '../../platform/logging';
 import { resolvableInstance } from '../datascience/helpers';
 import { createStartupKernel, initializeStartupMocks } from './rawStartup.node';
 
+// Driver startup record supplies the real kernel connection, runtime, process id, and versions.
 interface Started {
     event: 'started';
     connection: IKernelConnection;
@@ -47,6 +50,7 @@ function getErrorMessage(error: unknown) {
     return error instanceof Error ? error.message : String(error);
 }
 
+// Require the explicitly selected pinned interpreter for the real-stack contract.
 export function getNativeStartupPython() {
     const python = process.env.RAW_KERNEL_STARTUP_PYTHON;
     if (!python) {
@@ -55,12 +59,14 @@ export function getNativeStartupPython() {
     return python;
 }
 
+// Allow repeated contract runs while defaulting invalid iteration counts to one.
 export function getNativeStartupIterations() {
     const configured = process.env.RAW_KERNEL_STARTUP_ITERATIONS;
     const parsed = configured && /^\d+$/.test(configured) ? Number(configured) : 1;
     return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1;
 }
 
+// Owns the Python driver and adapts its connection and lifecycle to IKernelProcess.
 export class NativeStartupProcess extends ObservableDisposable implements IKernelProcess {
     public readonly canInterrupt = false;
     public readonly exitedEmitter = this._register(
@@ -69,11 +75,14 @@ export class NativeStartupProcess extends ObservableDisposable implements IKerne
     public readonly exited = this.exitedEmitter.event;
     public kernelConnectionMetadata!: LocalKernelSpecConnectionMetadata;
     public connection!: IKernelConnection;
+    // Driver-owned runtime files carry the sender gate and recorded probe state.
     public runtime!: string;
     public pid?: number;
+    // Versions reported by the driver identify the real stack under test.
     public versions: Record<string, string> = {};
     private child?: ChildProcessWithoutNullStreams;
     private cleanupListeners?: () => void;
+    // Settle disposal only after the driver has actually finished.
     private readonly stopped = createDeferred<void>();
     private requestedStop = false;
     private disposeFailure?: { error: unknown };
@@ -226,16 +235,19 @@ export class NativeStartupProcess extends ObservableDisposable implements IKerne
     }
 }
 
+// Connects the owned real process to Kernel/RawSessionConnection and manages contract cleanup.
 export class NativeStartupFixture {
     public kernel!: Kernel;
     public process!: NativeStartupProcess;
     public session!: RawSessionConnection;
     public startup?: ReturnType<Kernel['start']>;
+    // Records fallback connection disposal, which a passing contract must not require.
     public cleanupForcedDispose = false;
     public startedEvents = 0;
     private root!: string;
     private settled = false;
     private readonly disposables: { dispose(): void }[] = [];
+    // Tracks shell futures and connections so an unfinished startup can be cleaned up safely.
     private connectionObserver?: sinon.SinonSpy;
     private connectionType?: typeof import('@jupyterlab/services/lib/kernel/default').KernelConnection;
     private disposePromise?: Promise<void>;
@@ -323,6 +335,7 @@ export class NativeStartupFixture {
         created.fire(this.kernel);
     }
 
+    // Coordinate the first production execute send with the driver's real queued-sender gate.
     private installGate(token: CancellationToken) {
         const socket = KernelSocketMap.get(this.session.kernel!.id);
         if (!socket) {
@@ -357,6 +370,7 @@ export class NativeStartupFixture {
         });
     }
 
+    // Start the production kernel and track whether startup settled before cleanup.
     public start() {
         this.startup = this.kernel.start(new DisplayOptions(true));
         this.startup.then(
@@ -366,10 +380,12 @@ export class NativeStartupFixture {
         return this.startup;
     }
 
+    // Execute a real cell after startup or restart to prove the session is usable.
     public async firstCell() {
         return executeSilently(this.session.kernel!, 'print(42)');
     }
 
+    // Read the driver's fd/POLLIN observations and original-request execution count.
     public async state(): Promise<{
         fd_before: boolean;
         fd_after: boolean;
@@ -381,6 +397,7 @@ export class NativeStartupFixture {
         return fs.readJSON(path.join(this.process.runtime, 'fixture-state.json'));
     }
 
+    // Share cleanup across callers and enforce the real-process resource contract.
     public dispose(passed = false): Promise<void> {
         this.disposePromise ??= this.disposeImpl(passed);
         return this.disposePromise;

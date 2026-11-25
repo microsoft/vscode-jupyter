@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// In-memory fake-kernel harness for the missed-iopub startup race: StartupPeer uses real
+// loopback shell/control Router and iopub Publisher sockets, without a Python process.
+// RawStartupFixture connects it to a real Kernel and RawSessionConnection through a mocked
+// launcher and factory, letting tests drive the recovery handshake deterministically.
 import * as wire from '@nteract/messaging/lib/wire-protocol';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationToken, EventEmitter, Memento, NotebookDocument, Uri, WorkspaceConfiguration } from 'vscode';
@@ -21,6 +25,9 @@ import { WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { mockedVSCodeNamespaces, resetVSCodeMocks } from '../vscode-mock';
 
 type Message = wire.RawJupyterMessage;
+// Select the stall: none is healthy; execute withholds the primary's first execute request;
+// final-info withholds the final fresh readiness request; unrecoverable also ignores probes,
+// leaving the primary stalled until its communication budget expires.
 export type StartupGate = 'none' | 'execute' | 'final-info' | 'unrecoverable';
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 
@@ -68,16 +75,22 @@ export class StartupPeer extends ObservableDisposable implements IKernelProcess 
         new EventEmitter<{ exitCode?: number; reason?: string; stderr: string }>()
     );
     public readonly exited = this.exitedEmitter.event;
+    // Signals that the configured primary request has been withheld.
     public readonly gated = createDeferred<void>();
+    // Identities of fresh recovery peers; a nonempty set means a probe connected.
     public readonly peers = new Set<string>();
+    // Track execution by request and code to verify the original request runs exactly once.
     public readonly executionCounts = new Map<string, number>();
     public readonly executionCodes: string[] = [];
+    // Probe replies can be valid, have the wrong parent msg_id, or use the wrong signing key.
+    // The latter two must not be accepted as evidence of recovery.
     public auxiliaryReply: 'normal' | 'mismatch' | 'bad-signature' = 'normal';
     public additionalExecutionGate?: number;
     public delayedCommand?: { code: string; delay: number };
     public widgetVersion?: 7 | 8;
     public widgetVersionRequests = 0;
     public exitOnRequest = false;
+    // Drop the first warm-up idle or auxiliary acknowledgement to exercise quiescence and budget edges.
     public omitFirstWarmIdle = false;
     public omitFirstAuxiliaryAck = false;
     public readonly errors: unknown[] = [];
@@ -129,6 +142,8 @@ export class StartupPeer extends ObservableDisposable implements IKernelProcess 
         this.readers = [this.read(this.shell, 'shell'), this.read(this.control, 'control')];
     }
 
+    // Distinguish the primary by ZMQ identity, gate its configured request, and let a fresh
+    // peer release the queue unless the stall is deliberately unrecoverable.
     private async read(socket: Router, channel: 'shell' | 'control') {
         try {
             for await (const frames of socket) {
@@ -185,6 +200,7 @@ export class StartupPeer extends ObservableDisposable implements IKernelProcess 
         }
     }
 
+    // Flush withheld requests and open the gate for subsequent traffic.
     public async release() {
         this.opened = true;
         for (const item of this.queued.splice(0)) {
@@ -203,6 +219,7 @@ export class StartupPeer extends ObservableDisposable implements IKernelProcess 
         };
     }
 
+    // Publish ordered iopub status messages associated with the request.
     private publish(request: Message, execution_state: string) {
         return this.publishOutput(request, 'status', { execution_state });
     }
@@ -226,6 +243,8 @@ export class StartupPeer extends ObservableDisposable implements IKernelProcess 
         });
     }
 
+    // Send busy, the shell/control reply, and idle; optionally corrupt probe replies or omit idle.
+    // A missing auxiliary acknowledgement is handled before this method in read().
     private async respond(message: Message, channel: 'shell' | 'control') {
         await this.publish(message, 'busy');
         let response: Message;
@@ -307,10 +326,12 @@ export class StartupPeer extends ObservableDisposable implements IKernelProcess 
     }
 }
 
+// Wires the fake process into production startup and provides controls for restart races.
 export class RawStartupFixture {
     public kernel!: Kernel;
     public session!: RawSessionConnection;
     public startup?: ReturnType<Kernel['start']>;
+    // The current fake kernel process; a restart can replace it with a new generation.
     public peer: StartupPeer;
     public startedEvents = 0;
     public firstExecutionId?: string;
@@ -387,6 +408,7 @@ export class RawStartupFixture {
         });
         this.kernel = createStartupKernel(uri, metadata, instance(factory), this.timeout, this.startupCommands);
         this.kernel.onStarted(() => this.startedEvents++);
+        // Model the product's first queued execution and capture its id for exactly-once checks.
         this.kernel.addHook('didStart', async (session) => {
             const future = session.kernel.requestExecute(
                 {
@@ -403,15 +425,18 @@ export class RawStartupFixture {
         });
     }
 
+    // Start the real Kernel using the fake process transport.
     public start() {
         this.startup = this.kernel.start(new DisplayOptions(true));
         return this.startup;
     }
 
+    // Run a first cell after startup to confirm the recovered session remains usable.
     public async firstCell() {
         await this.executeCell('pass');
     }
 
+    // Execute arbitrary cell code through the current raw session.
     public async executeCell(code: string) {
         await executeSilently(this.session.kernel!, code);
     }
@@ -421,6 +446,7 @@ export class RawStartupFixture {
         await executeSilently(session.kernel!, code);
     }
 
+    // Pause the next process launch so tests can interleave competing restarts.
     public deferNextLaunch() {
         const entered = createDeferred<void>();
         const release = createDeferred<void>();

@@ -369,12 +369,16 @@ abstract class BaseKernel implements IBaseKernel {
         await this.disposingPromise;
     }
     public restart(): Promise<void> {
+        // Each restart owns a fresh cancellation source that doubles as its "attempt identity".
+        // Cancelling and replacing the previous source supersedes any in-flight restart/start, and
+        // `throwIfRestartSuperseded` uses this identity to bail out the moment a newer restart begins.
         this.startCancellation.cancel();
         this.startCancellation.dispose();
         const attempt = (this.startCancellation = new CancellationTokenSource());
         return this.restartImpl(attempt);
     }
 
+    /** Throws `CancellationError` if `attempt` is no longer the active restart (superseded), or the kernel is disposing/disposed/cancelled. */
     private throwIfRestartSuperseded(attempt: CancellationTokenSource) {
         if (
             this.startCancellation !== attempt ||
@@ -414,6 +418,8 @@ abstract class BaseKernel implements IBaseKernel {
                 this.throwIfRestartSuperseded(attempt);
 
                 if (restartSession) {
+                    // Warm path: a live session exists. Restart the transport in place. `_restartPromise`
+                    // coalesces concurrent restarts onto one underlying session.restart() call.
                     if (!this._restartPromise) {
                         this._restartPromise = restartSession.restart();
                         this._restartPromise.finally(() => (this._restartPromise = undefined)).catch(noop);
@@ -421,6 +427,7 @@ abstract class BaseKernel implements IBaseKernel {
                     await this._restartPromise;
                     this.throwIfRestartSuperseded(attempt);
                 } else {
+                    // Cold path: nothing to restart, so start fresh.
                     // start() already runs initialization, including the single-use raw coordinator.
                     restartSession = await raceCancellationError(attemptToken, this.start(new DisplayOptions(false)));
                     this.throwIfRestartSuperseded(attempt);
@@ -436,6 +443,9 @@ abstract class BaseKernel implements IBaseKernel {
                 this.throwIfRestartSuperseded(attempt);
                 logger.error(`Restart failed ${getDisplayPath(this.uri)}`, ex);
                 const session = restartSession || this._session;
+                // Owned-cleanup boundary: only tear down the session if we are still the active restart
+                // attempt AND still own this exact session. Otherwise a newer restart/start has taken
+                // over and must not have its session disposed out from under it.
                 if (
                     this.startCancellation === attempt &&
                     !attemptToken.isCancellationRequested &&
@@ -466,6 +476,7 @@ abstract class BaseKernel implements IBaseKernel {
                         await raceCancellationError(attemptToken, this.initializeSession(session, attemptToken));
                         this.throwIfRestartSuperseded(attempt);
                     } catch (ex) {
+                        // Same owned-cleanup boundary as above, for a failure during raw re-initialization.
                         if (
                             this.startCancellation === attempt &&
                             !attemptToken.isCancellationRequested &&
@@ -497,6 +508,10 @@ abstract class BaseKernel implements IBaseKernel {
             }
 
             this.throwIfRestartSuperseded(attempt);
+            this.throwIfRestartSuperseded(attempt);
+            // Final publish: re-check ownership before each observable side effect (firing restarted,
+            // running didStart hooks) so a restart superseded mid-flight never emits events for a
+            // session that is no longer the active one.
             if (!session || session !== restartSession || this._session !== session) {
                 throw new CancellationError();
             }
@@ -780,6 +795,10 @@ abstract class BaseKernel implements IBaseKernel {
             logger.info(`Kernel successfully started`);
             return session;
         } catch (ex) {
+            // The session was created but never published (`this._session` is only assigned on the
+            // success path above). If initialization failed after creation, dispose it so we don't
+            // leak the kernel process and its sockets. This matters more now that recovery makes the
+            // post-create initialization window longer and cancellable.
             if (session) {
                 await disposeAsync(session).catch((error) =>
                     logger.warn('Failed to dispose unpublished kernel session', error)

@@ -19,6 +19,16 @@ type CachedKernelInfo = {
 const KEY = 'KERNEL_INFO';
 const CACHE_EXPIRY_IN_MS = 1000 * 60 * 60 * 24 * 2;
 
+/**
+ * Requests kernel info, returning it (or cached/default content) or undefined.
+ *
+ * @param options When supplied with a `token`, cancellation now *throws* (previously this function
+ *   always resolved). Only the startup-recovery path passes a token, and its callers expect the
+ *   throw; all other callers omit `options` and keep the original "never throws" behavior.
+ *   `requireFresh` forces a brand-new kernel-info round-trip (ignoring any cached/pending info); it
+ *   is used by the startup coordinator's readiness fence, which must confirm the live kernel rather
+ *   than publish stale readiness.
+ */
 export async function getKernelInfo(
     session: IKernelSession,
     kernelConnectionMetadata: KernelConnectionMetadata,
@@ -40,6 +50,10 @@ export async function getKernelInfo(
         status: 'ok'
     };
     if (!session.kernel) {
+        // The startup coordinator (requireFresh) must surface a hard failure here rather than
+        // returning undefined: a missing kernel means readiness cannot be confirmed, and silently
+        // returning would let startup publish a kernel that is actually gone. Other callers keep the
+        // original lenient behavior and simply return.
         if (options?.requireFresh) {
             throw new JupyterInvalidKernelError(kernelConnectionMetadata);
         }

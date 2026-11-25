@@ -10,6 +10,8 @@ import * as sinon from 'sinon';
 import * as telemetry from '../../kernels/telemetry/helper';
 import { createDeferred } from '../../platform/common/utils/async';
 
+// Slower real-stack contract tests: a real Python/ipykernel process exercises production
+// recovery end to end, with pinned versions asserted in the gated recovery case.
 suite('Raw Kernel Startup Native Contract', function () {
     this.timeout(20000);
     const iterations = getNativeStartupIterations();
@@ -28,6 +30,7 @@ suite('Raw Kernel Startup Native Contract', function () {
     });
 
     for (let iteration = 0; iteration < iterations; iteration++) {
+        // The real queued-input race recovers, executes once, and leaves the first cell usable.
         test(`the actual queued-input sender is recovered by production Node code and the first cell runs once (iteration ${iteration})`, async () => {
             fixture = new NativeStartupFixture(python);
             await fixture.initialize();
@@ -52,6 +55,7 @@ suite('Raw Kernel Startup Native Contract', function () {
             assert.strictEqual(fixture.cleanupForcedDispose, false);
         });
 
+        // An unmodified healthy real kernel starts and executes without fixture intervention.
         test(`an unmodified healthy kernel starts and runs its first cell without fixture intervention (iteration ${iteration})`, async () => {
             fixture = new NativeStartupFixture(python, false);
             await fixture.initialize();
@@ -62,6 +66,7 @@ suite('Raw Kernel Startup Native Contract', function () {
             assert.strictEqual(fixture.cleanupForcedDispose, false);
         });
 
+        // Stalled optional post-start executable telemetry cannot prevent bounded startup and cell execution.
         test(`optional executable telemetry cannot consume the whole initialization budget (iteration ${iteration})`, async () => {
             fixture = new NativeStartupFixture(python, false, 3000);
             await fixture.initialize();
@@ -85,6 +90,7 @@ suite('Raw Kernel Startup Native Contract', function () {
             }
         });
 
+        // Restart replaces the real process and recovers its new sender before executing a cell.
         test(`restart uses a new real sender and runs its first cell after recovery (iteration ${iteration})`, async () => {
             fixture = new NativeStartupFixture(python);
             await fixture.initialize();

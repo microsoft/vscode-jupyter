@@ -103,9 +103,12 @@ async function removeKnownEmptyRoots(roots: Iterable<string>) {
     }
 }
 
+// Unit coverage for real spawn failure and cleanup of partially initialized native fixtures,
+// including idempotent disposal, resource restoration, and safe subsequent fixture creation.
 suite('Review regression native spawn cleanup', function () {
     this.timeout(10_000);
 
+    // A missing interpreter preserves ENOENT and settles disposal once without a fabricated successful exit.
     test('Review regression native spawn error and close settle process disposal without a successful exit', async () => {
         const interpreter = createMissingInterpreterPath();
         assert.isFalse(await fsExtra.pathExists(interpreter), 'The owned missing interpreter path unexpectedly exists');
@@ -131,6 +134,7 @@ suite('Review regression native spawn cleanup', function () {
         }
     });
 
+    // Partial spawn failure restores the spy and owned root so a later fixture can attempt startup and clean up safely.
     test('Review regression native spawn fixture disposal restores partial initialization resources', async () => {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const services =

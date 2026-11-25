@@ -9,6 +9,9 @@ import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError'
 import { StartOptions } from '../../displayOptions';
 import { CancellationError, CancellationTokenSource } from 'vscode';
 
+// Fast deterministic regression coverage of the production RawSocket, RawSessionConnection,
+// and Kernel against StartupPeer over loopback ZMQ: handshake, no-progress budget, and restart supersession.
+// The budget counts unacknowledged, non-busy time; acknowledged busy work pauses it.
 suite('Raw Kernel Startup Recovery', function () {
     this.timeout(12000);
     let fixture: RawStartupFixture;
@@ -18,6 +21,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.deepEqual(fixture?.errors, []);
     });
 
+    // A fresh peer unblocks the withheld original request, which runs exactly once before the first cell.
     test('recovers the original startup execution through a fresh peer and runs the first cell', async () => {
         fixture = new RawStartupFixture('execute');
         await fixture.initialize();
@@ -33,6 +37,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.strictEqual(fixture.kernel.status, 'idle');
     });
 
+    // Cached kernel info cannot publish readiness while the fresh readiness request is withheld.
     test('does not publish cached readiness while a fresh kernel-info request is queued', async () => {
         fixture = new RawStartupFixture('final-info');
         await fixture.initialize();
@@ -55,6 +60,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.strictEqual(fixture.startedEvents, 1);
     });
 
+    // Disabling recovery preserves normal startup and does not create a probe peer.
     test('a raw Python kernel without startup recovery starts normally', async () => {
         fixture = new RawStartupFixture('none', 6000, false);
         await fixture.initialize();
@@ -65,6 +71,7 @@ suite('Raw Kernel Startup Recovery', function () {
         await fixture.firstCell();
     });
 
+    // Healthy startup completes without an unnecessary recovery peer.
     test('healthy startup does not create a recovery peer', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -74,6 +81,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.strictEqual(fixture.startedEvents, 1);
     });
 
+    // An unrecoverable stall exhausts the no-progress budget without publishing a session.
     test('an unrecoverable startup fails when the communication budget is exhausted without publishing', async () => {
         fixture = new RawStartupFixture('unrecoverable', 1800);
         await fixture.initialize();
@@ -87,6 +95,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.isTrue(fixture.peer.isDisposed);
     });
 
+    // A missing warm-up idle does not prevent a later fresh readiness exchange.
     test('an abandoned warm-up idle does not block a subsequent fresh readiness exchange', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -96,6 +105,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.strictEqual(fixture.startedEvents, 1);
     });
 
+    // A probe without acknowledgement cannot bypass quiescence even if the original execution ran.
     test('an accepted auxiliary request with no acknowledgement cannot bypass quiescence', async () => {
         fixture = new RawStartupFixture('execute', 2800);
         await fixture.initialize();
@@ -110,6 +120,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.strictEqual(fixture.startedEvents, 0);
     });
 
+    // Process exit during readiness retains its specific error and lifecycle ordering.
     test('a real process-exit ordering during readiness preserves the process-exit error', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -130,6 +141,7 @@ suite('Raw Kernel Startup Recovery', function () {
         }
     });
 
+    // Cancelling stalled startup disposes its process and never publishes the session.
     test('cancellation disposes the unpublished session and its pending future', async () => {
         fixture = new RawStartupFixture('execute');
         await fixture.initialize();
@@ -145,6 +157,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.strictEqual(fixture.startedEvents, 0);
     });
 
+    // A late start hook cannot publish a session after cancellation.
     test('a late swallowed hook cannot publish a cancelled session', async () => {
         fixture = new RawStartupFixture('none', 1000);
         await fixture.initialize();
@@ -165,6 +178,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.strictEqual(fixture.startedEvents, 0);
     });
 
+    // Restart uses the new socket and recovers its own queued execution.
     test('restart resolves the new socket and recovers the new original execution', async () => {
         fixture = new RawStartupFixture('execute');
         await fixture.initialize();
@@ -186,6 +200,7 @@ suite('Raw Kernel Startup Recovery', function () {
         await fixture.firstCell();
     });
 
+    // A later initialization stall requires another fresh recovery peer.
     test('a later initialization stall requires a different fresh peer', async () => {
         fixture = new RawStartupFixture('execute');
         await fixture.initialize();
@@ -195,6 +210,7 @@ suite('Raw Kernel Startup Recovery', function () {
         await fixture.firstCell();
     });
 
+    // A cold restart initializes and publishes its completed context only once.
     test('restarting before the first start does not initialize the completed context twice', async () => {
         fixture = new RawStartupFixture('execute');
         await fixture.initialize();
@@ -204,6 +220,7 @@ suite('Raw Kernel Startup Recovery', function () {
         await fixture.firstCell();
     });
 
+    // A newer restart cancels the hook-blocked older one without duplicate launches or success events.
     test('a newer restart supersedes one waiting for willRestart hooks', async () => {
         fixture = new RawStartupFixture('none');
         fixture.startupCommands.push('review-restart-command');
@@ -257,6 +274,7 @@ suite('Raw Kernel Startup Recovery', function () {
         await fixture.firstCell();
     });
 
+    // A newer restart shares the in-flight transport but cancels older initialization without duplicate events.
     test('a newer restart shares an in-flight transport but supersedes initialization', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -314,6 +332,7 @@ suite('Raw Kernel Startup Recovery', function () {
         await fixture.firstCell();
     });
 
+    // A newer restart supersedes stuck initialization without losing its session or firing extra events.
     test('a never-settling initialization does not wedge later restarts', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -370,6 +389,7 @@ suite('Raw Kernel Startup Recovery', function () {
         }
     });
 
+    // A newer cold restart cancels the unpublished initializer without disturbing its replacement session.
     test('a superseding cold restart releases a stuck unpublished initializer', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -416,6 +436,7 @@ suite('Raw Kernel Startup Recovery', function () {
         }
     });
 
+    // A restart whose owned session dies rejects, cleans up, and emits no success event.
     test('restart rejects and disposes the generation when its owned raw session dies during initialization', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -466,6 +487,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.isUndefined(fixture.kernel.session);
     });
 
+    // A newer restart supersedes a stuck post-start wait without disrupting its replacement session.
     test('a never-settling post-start waitUntil does not wedge later restarts', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -531,6 +553,7 @@ suite('Raw Kernel Startup Recovery', function () {
         }
     });
 
+    // Late completion from a superseded restart cannot clear the newer post-start handler.
     test('a late post-start completion does not clear a newer handler in progress', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -576,6 +599,7 @@ suite('Raw Kernel Startup Recovery', function () {
         }
     });
 
+    // Disposal cancels a restart blocked in a post-start handler.
     test('disposing releases a restart blocked in a post-start handler', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -604,6 +628,7 @@ suite('Raw Kernel Startup Recovery', function () {
         }
     });
 
+    // Disposal during transport cancels restart without emitting a success event.
     test('Review regression restart cancellation during transport rejects without a success event', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -640,6 +665,7 @@ suite('Raw Kernel Startup Recovery', function () {
         );
     });
 
+    // A failed superseding restart leaves the kernel able to retry successfully.
     test('a failed superseding restart permits a fresh retry', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -692,6 +718,7 @@ suite('Raw Kernel Startup Recovery', function () {
         assert.strictEqual(hooks, 3);
     });
 
+    // Signed widget traffic after restart still triggers version detection without recovery probes.
     test('Review regression widget detects a signed post-restart message after the startup token is cancelled', async () => {
         fixture = new RawStartupFixture('none');
         await fixture.initialize();
@@ -734,6 +761,7 @@ suite('Raw Kernel Startup Recovery', function () {
         }
     });
 
+    // Acknowledged busy startup work pauses the no-progress budget even when it outlasts the budget.
     test('an acknowledged slow startup command pauses the budget instead of failing', async () => {
         fixture = new RawStartupFixture('none', 1200);
         fixture.startupCommands.push('startup_work');
@@ -748,6 +776,7 @@ suite('Raw Kernel Startup Recovery', function () {
         await fixture.firstCell();
     });
 
+    // Acknowledged slow startup work completes without probes under a larger deadline.
     test('a larger configured deadline permits acknowledged slow startup without probes', async () => {
         fixture = new RawStartupFixture('none', 4000);
         fixture.startupCommands.push('startup_work');
@@ -759,6 +788,7 @@ suite('Raw Kernel Startup Recovery', function () {
     });
 
     for (const reply of ['mismatch', 'bad-signature'] as const) {
+        // Recovery rejects a fresh-peer kernel_info reply with a mismatched parent id or bad signature, never publishing readiness.
         test(`an invalid ${reply} auxiliary reply cannot publish readiness`, async () => {
             fixture = new RawStartupFixture('execute');
             await fixture.initialize();

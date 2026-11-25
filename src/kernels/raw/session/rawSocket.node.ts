@@ -15,7 +15,7 @@ import { getZeroMQ } from './zeromq.node';
 import type { IDisposable } from '../../../platform/common/types';
 import { generateUuid } from '../../../platform/common/uuid';
 import { CancellationError, CancellationToken } from 'vscode';
-import { KernelStartupRecovery } from '../../kernelStartupRecovery';
+import { KernelStartupRecovery, KernelStartupRecoveryReport } from '../../kernelStartupRecovery';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import type { LocalKernelConnectionMetadata } from '../../types';
 
@@ -32,6 +32,20 @@ interface IChannels {
     control: Dealer;
     stdin: Dealer;
     iopub: Subscriber;
+}
+
+/**
+ * Enables startup-recovery for a raw socket's kernel. When supplied, the socket builds a
+ * {@link KernelStartupRecovery} that monitors startup under a no-progress budget and probes a stuck
+ * kernel with a fresh peer (see issue #17481).
+ */
+export interface RawSocketStartupOptions {
+    /** No-progress startup budget in ms (the configured kernel launch timeout). */
+    timeout: number;
+    /** Metadata for the kernel being started, used to build the timeout error. */
+    metadata: LocalKernelConnectionMetadata;
+    /** Optional telemetry sink invoked once with the final recovery outcome. */
+    report?: (info: KernelStartupRecoveryReport) => void;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -59,15 +73,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     constructor(
         private connection: IKernelConnection,
         private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
-        startup?: {
-            timeout: number;
-            metadata: LocalKernelConnectionMetadata;
-            report?: (info: {
-                probeCount: number;
-                durationMs: number;
-                outcome: 'healthy' | 'recovered' | 'timeout' | 'cancelled' | 'failed';
-            }) => void;
-        }
+        startup?: RawSocketStartupOptions
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
@@ -318,6 +324,25 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         }
     }
 
+    /**
+     * Recovery probe for the ipykernel 7 IOPub/XPUB startup race (issue #17481).
+     *
+     * When the kernel silently misses the client's subscription, the original startup request never
+     * gets its readiness handshake and hangs. This opens a BRAND-NEW, throwaway ZMQ `Dealer` peer
+     * (its own `routingId`) to the kernel's shell endpoint and performs a one-shot handshake:
+     *
+     *   1. connect the fresh peer to the shell socket (a new peer re-triggers the kernel's XPUB
+     *      subscription bookkeeping, which is what actually unblocks the original request);
+     *   2. send a single signed `kernel_info_request` (this mirrors what ipykernel/jupyter_client do
+     *      to confirm a kernel is alive);
+     *   3. wait up to ~1s for the matching `kernel_info_reply` (same parent msg_id).
+     *
+     * The socket uses `linger: 0` and bounded send/receive timeouts so it never outlives the probe.
+     * `EAGAIN` (no reply in time) is swallowed — the monitor will simply probe again — while any other
+     * error is surfaced. Note `username`/`session` are required Jupyter message header fields; the
+     * `'startup-recovery'` username is just a descriptive, benign label (nothing authenticates on it)
+     * that makes these probe messages easy to spot in logs.
+     */
     private async probeStartup(token: CancellationToken) {
         const zmq = getZeroMQ();
         const socket = new zmq.Dealer({

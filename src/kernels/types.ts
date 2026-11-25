@@ -748,16 +748,29 @@ export interface IKernelSessionFactory {
     create(options: KernelSessionCreationOptions): Promise<IKernelSession>;
 }
 
+/**
+ * Coordinates recovery of a stuck raw Python kernel startup (Windows + ipykernel 7 IOPub/XPUB race,
+ * issue #17481). Exposed so the session/kernel can run initialization under a no-progress budget and
+ * have a fresh-peer probe nudge a kernel that silently missed the startup handshake.
+ * Implemented by `KernelStartupRecovery`.
+ */
 export interface IKernelStartup {
+    /** Remaining no-progress budget in ms; only counts down while the kernel appears unresponsive. */
     readonly remainingTime: number;
+    /** Cancellation token that fires when startup fails, times out, or completes. */
     readonly token: CancellationToken;
+    /** The failure/timeout/cancellation reason once startup has failed, otherwise undefined. */
     readonly error?: Error;
+    /** Runs the initialization `operation` under the recovery token while probes run concurrently. */
     run<T>(operation: (token: CancellationToken) => Promise<T>, token: CancellationToken): Promise<T>;
+    /** Waits for the kernel to quiesce, runs the fresh readiness check, then stops monitoring. */
     complete(ready: () => Promise<unknown>, token: CancellationToken): Promise<void>;
+    /** Tears down monitoring; before success this is treated as a cancellation. */
     dispose(): void;
 }
 
 export interface IKernelSocket {
+    /** Startup-recovery coordinator for the current kernel, present only while a raw startup is recovering. */
     readonly startup?: IKernelStartup;
     /**
      * Used to configure the protocol for WebSocket messages in Jupyter Lab.

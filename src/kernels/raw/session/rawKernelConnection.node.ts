@@ -229,6 +229,10 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             );
             const timeout = setTimeout(() => postStartToken.cancel(), this.launchTimeout);
             disposables.push({ dispose: () => clearTimeout(timeout) });
+            // Overall deadline for the post-start readiness phase: if the kernel is not ready within
+            // launchTimeout, cancel `postStartToken` so the readiness wait below aborts. When startup
+            // recovery is active it runs under this token and converts a timeout into a recovery
+            // attempt before giving up.
             await KernelProgressReporter.wrapAndReportProgress(
                 this.resource,
                 DataScience.waitingForJupyterSessionToBeIdle,
@@ -582,7 +586,15 @@ async function postStartKernel(
     // Attempt to get kernel to respond to requests (this is what jupyter does today).
     // Kinda warms up the kernel communication & ensure things are in the right state.
     logger.debug(`Kernel status is '${kernel?.status}' before requesting kernel info and after ready`);
-    // Both a reply and matching idle are needed. Retry until readiness or the startup deadline.
+    // Confirm the kernel is actually responsive before declaring startup complete: send a
+    // kernel_info_request and wait for BOTH a reply and a matching IOPub idle. This mirrors what
+    // jupyter (python) and jupyter_client / jupyterlab (npm) do. Historically jupyterlab's
+    // default.js only waits ~3s here (we don't want to slow kernel startup); see
+    // https://github.com/microsoft/vscode-jupyter/issues/8917 for why a long fixed wait is too slow.
+    // With startup recovery we instead retry at ~500ms intervals until the kernel responds or the
+    // startup deadline (launchTimeout) is reached, so a missed-IOPub kernel gets another chance.
+    // In jupyter_server/services/kernels/connection/channels.py the request is sent on BOTH the
+    // shell and control channels, and a response on either is treated as success; we do the same.
     const gotIoPubMessage = createDeferred<boolean>();
     const kernelInfoRequestHandled = createDeferred<boolean>();
     const iopubHandler = () => gotIoPubMessage.resolve(true);
@@ -616,8 +628,13 @@ async function postStartKernel(
     try {
         const stopWatch = new StopWatch();
         let attempts = 0;
+        // `launchTimeout` is already in milliseconds. (A previous version multiplied it by 1000,
+        // turning a 60s budget into ~16.7 hours, which is the root cause of the "stuck Connecting to
+        // kernel" hang in issue #17481 — the loop effectively never timed out.)
         while (stopWatch.elapsedTime < launchTimeout) {
             attempts += 1;
+            // Retry the kernel-info request roughly every 500ms (bounded by launchTimeout), matching
+            // jupyterlab's retry cadence, until we get both an IOPub message and a reply.
             const retry = createDeferred<void>();
             const retryTimer = setTimeout(() => retry.resolve(), Math.min(launchTimeout, 500));
             try {
@@ -721,6 +738,10 @@ function newRawKernel(
     let socketInstance: RawSocket;
     class RawSocketWrapper extends RawSocket {
         constructor() {
+            // Enable startup recovery only when it is requested (Windows + Python gate, decided by the
+            // caller) and this is a Python kernel. When enabled we pass the launch timeout as the
+            // no-progress budget, the metadata for building a timeout error, and a telemetry `report`
+            // callback. Otherwise we pass `undefined`, and the socket behaves exactly as before.
             super(
                 kernelProcess.connection,
                 jupyterLabSerialize.serialize,
