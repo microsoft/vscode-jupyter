@@ -101,7 +101,7 @@ export async function clickWidget(comms: Utils, cell: NotebookCell, selector: st
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite.skip('Standard IPyWidget Tests @widgets', function () {
+suite('Standard IPyWidget Tests @widgets', function () {
     const disposables: IDisposable[] = [];
 
     this.timeout(120_000);
@@ -124,15 +124,22 @@ suite.skip('Standard IPyWidget Tests @widgets', function () {
         ({ ipyWidgetVersion } = await prewarmNotebooks());
         logger.info('Suite Setup Standard IPyWidget Tests, Step 5');
         sinon.restore();
+        logger.info('Suite Setup Standard IPyWidget Tests, Step 6');
         editor = (await createEmptyPythonNotebook(disposables, undefined, true)).editor;
+        logger.info('Suite Setup Standard IPyWidget Tests, Step 7');
         await selectDefaultController(editor);
+        logger.info('Suite Setup Standard IPyWidget Tests, Step 8');
         // Widgets get rendered only when the output is in view. If we have a very large notebook
         // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
         // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
         await hideOutputPanel();
+        logger.info('Suite Setup Standard IPyWidget Tests, Step 9');
         await commands.executeCommand('workbench.action.maximizeEditorHideSidebar');
+        logger.info('Suite Setup Standard IPyWidget Tests, Step 10');
         await commands.executeCommand('notebook.cell.collapseAllCellInputs');
+        logger.info('Suite Setup Standard IPyWidget Tests, Step 11');
         comms = await initializeWidgetComms(disposables);
+        logger.info('Suite Setup Standard IPyWidget Tests, Step 12');
 
         logger.info('Suite Setup (completed)');
     });

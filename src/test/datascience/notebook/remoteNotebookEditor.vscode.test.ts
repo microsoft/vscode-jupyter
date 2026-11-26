@@ -90,7 +90,7 @@ suite('Remote Kernel Execution', function () {
         logger.info(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test.skip('Local Kernel state is not lost when connecting to remote', async function () {
+    test('Local Kernel state is not lost when connecting to remote', async function () {
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         logger.ci(`active interpreter ${activeInterpreter?.uri.path}`);
         const { notebook } = await createEmptyPythonNotebook(disposables);
