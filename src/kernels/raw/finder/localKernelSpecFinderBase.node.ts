@@ -362,7 +362,6 @@ export async function loadKernelSpec(
         return;
     }
 
-    // Update the display name too if we have an interpreter.
     const isDefaultPythonName = kernelJson.display_name.toLowerCase().match(isDefaultPythonKernelSpecSpecName);
     if (!isDefaultPythonName && kernelJson.language === PYTHON_LANGUAGE && kernelJson.argv.length > 2) {
         // Default kernel spec argv for Python kernels is `"python","-m","ipykernel_launcher","-f","{connection_file}"`
@@ -372,7 +371,8 @@ export async function loadKernelSpec(
             .slice(1) // ignore python
             .map((arg) => arg.toLowerCase())
             .filter((arg) => !['-m', 'ipykernel', 'ipykernel_launcher', '-f', '{connection_file}'].includes(arg));
-        if (argv.length) {
+        // Leave missing names for the kernelspec directory fallback below.
+        if (argv.length && kernelJson.name !== undefined) {
             kernelJson.name = `${kernelJson.name}.${argv.join('#')}`;
         }
     }

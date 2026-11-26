@@ -8,6 +8,8 @@ import { dispose } from '../../../platform/common/utils/lifecycle';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable } from '../../../platform/common/types';
 import { uriEquals } from '../../../test/datascience/helpers';
+import { getInterpreterKernelSpecName } from '../../helpers';
+import { crateMockedPythonApi } from '../../helpers.unit.test';
 import { IJupyterKernelSpec } from '../../types';
 import { JupyterPaths } from './jupyterPaths.node';
 import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
@@ -54,6 +56,45 @@ suite('Local Kernel Spec Finder', () => {
         assert.deepEqual(loadedSpec, kernelSpec);
 
         verify(fs.readFile(uriEquals(uri))).once();
+    });
+    const registeredName = 'pixi-kernel-python3';
+    for (const { name, expectedName } of [
+        { name: undefined, expectedName: registeredName },
+        { name: registeredName, expectedName: `${registeredName}.run#python` },
+        { name: 'undefined', expectedName: 'undefined.run#python' }
+    ]) {
+        test(`Load a global Pixi kernel spec ${
+            name ? 'with' : 'without'
+        } an explicit name as ${expectedName}`, async () => {
+            const uri = Uri.joinPath(Uri.file('kernels'), registeredName, 'kernel.json');
+            const kernelSpec = {
+                name,
+                argv: ['pixi', 'run', 'python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                display_name: 'Python (Pixi)',
+                language: 'python'
+            };
+            when(fs.readFile(uriEquals(uri))).thenResolve(JSON.stringify(kernelSpec));
+
+            const loadedSpec = await finder.loadKernelSpec(uri, cancellation.token);
+
+            assert.strictEqual(loadedSpec?.name, expectedName);
+        });
+    }
+    test('Disambiguate a custom interpreter kernel spec by its launch arguments', async () => {
+        crateMockedPythonApi(disposables);
+        const interpreter = { id: 'venv', uri: Uri.file('venv/bin/python') };
+        when(fs.exists(uriEquals(interpreter.uri))).thenResolve(true);
+        const uri = Uri.file('venv/share/jupyter/kernels/custom/kernel.json');
+        const kernelSpec = {
+            argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}', '--profile=custom'],
+            display_name: 'Custom Python',
+            language: 'python'
+        };
+        when(fs.readFile(uriEquals(uri))).thenResolve(JSON.stringify(kernelSpec));
+
+        const loadedSpec = await finder.loadKernelSpec(uri, cancellation.token, interpreter);
+
+        assert.strictEqual(loadedSpec?.name, `${await getInterpreterKernelSpecName(interpreter)}.--profile=custom`);
     });
     test('Load a kernel spec file again if cache is cleared', async () => {
         const kernelSpec: IJupyterKernelSpec = {
