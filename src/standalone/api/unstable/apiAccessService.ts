@@ -25,7 +25,8 @@ export const TrustedExtensionPublishers = new Set([
     JVSC_EXTENSION_ID.split('.')[0],
     'rchiodo',
     'donjayamanne',
-    'SynapseVSCode'
+    'SynapseVSCode',
+    'datalayer'
 ]);
 
 // We dont want to expose this API to everyone, else we'll keep track of who has access to this.
