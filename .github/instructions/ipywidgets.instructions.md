@@ -436,7 +436,10 @@ The IPyWidgets system relies on a sophisticated kernel hook system that intercep
 **Implementation**: Uses TypeScript mixin pattern to add hook capabilities to any WebSocket-like class:
 
 ```typescript
-export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperClass: T) {
+export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(
+    SuperClass: T,
+    deriveReceiveHookData?: (data: WebSocketData, isBinary?: unknown) => WebSocketData
+) {
     return class BaseKernelSocket extends SuperClass implements IKernelSocket {
         private receiveHooks: ((data: WebSocketData) => Promise<void>)[];
         private sendHooks: ((data: any, cb?: (err?: Error) => void) => Promise<void>)[];
@@ -454,7 +457,10 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
         protected handleEvent(superHandler, event, ...args): boolean {
             if (event === 'message' && this.receiveHooks.length) {
                 this.msgChain = this.msgChain
-                    .then(() => Promise.all(this.receiveHooks.map((p) => p(args[0]))))
+                    .then(() => {
+                        const hookData = deriveReceiveHookData ? deriveReceiveHookData(args[0], args[1]) : args[0];
+                        return Promise.all(this.receiveHooks.map((p) => p(hookData)));
+                    })
                     .then(() => superHandler(event, ...args))
                     .catch((e) => logger.error(`Exception while handling messages: ${e}`));
                 return true;
@@ -464,6 +470,9 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
     };
 }
 ```
+
+The optional adapter derives hook data once per queued message; the original event arguments are forwarded unchanged.
+Desktop sockets decode only explicitly non-binary Node Buffers as UTF-8. Without receive hooks, the event is forwarded directly.
 
 #### Message Hook Registration Process
 
