@@ -10,6 +10,11 @@ import { noop } from '../../../platform/common/utils/misc';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
 import { injectable } from 'inversify';
 import { KernelSocketMap } from '../../kernelSocket';
+import type * as WebSocketWS from 'ws';
+
+function deriveReceiveHookData(data: WebSocketWS.Data, isBinary?: unknown): WebSocketWS.Data {
+    return isBinary === false && Buffer.isBuffer(data) ? data.toString('utf8') : data;
+}
 
 // Function for creating node Request object that prevents jupyterlab services from writing its own
 // authorization header.
@@ -72,7 +77,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
             }
             return co;
         };
-        class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
+        class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic, deriveReceiveHookData) {
             private kernelId: string | undefined;
             private timer: NodeJS.Timeout | number;
 
@@ -105,7 +110,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
         return JupyterWebSocket as any;
     }
     public wrapWebSocketCtor(websocketCtor: ClassType<WebSocketIsomorphic>): ClassType<WebSocketIsomorphic> {
-        class JupyterWebSocket extends KernelSocketWrapper(websocketCtor) {
+        class JupyterWebSocket extends KernelSocketWrapper(websocketCtor, deriveReceiveHookData) {
             private kernelId: string | undefined;
             private timer: NodeJS.Timeout | number;
 

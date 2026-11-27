@@ -49,9 +49,13 @@ export type IWebSocketLike = {
 /**
  * Adds send/receive hooks to a WebSocketLike object. These are necessary for things like IPyWidgets support.
  * @param SuperClass The class to mix into
+ * @param deriveReceiveHookData Optional transformation of the data seen by receive hooks
  * @returns
  */
-export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperClass: T) {
+export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(
+    SuperClass: T,
+    deriveReceiveHookData?: (data: WebSocketWS.Data, isBinary?: unknown) => WebSocketWS.Data
+) {
     return class BaseKernelSocket extends SuperClass implements IKernelSocket {
         private receiveHooks: ((data: WebSocketWS.Data) => Promise<void>)[];
         private sendHooks: ((data: any, cb?: (err?: Error) => void) => Promise<void>)[];
@@ -99,7 +103,10 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
                 // b) Event fires
                 // c) Next message happens after this one (so this side can handle the message before another event goes through)
                 this.msgChain = this.msgChain
-                    .then(() => Promise.all(this.receiveHooks.map((p) => p(args[0]))))
+                    .then(() => {
+                        const hookData = deriveReceiveHookData ? deriveReceiveHookData(args[0], args[1]) : args[0];
+                        return Promise.all(this.receiveHooks.map((p) => p(hookData)));
+                    })
                     .then(() => superHandler(event, ...args))
                     .catch((e) => logger.error(`Exception while handling messages: ${e}`));
                 // True value indicates there were handlers. We definitely have 'message' handlers.
