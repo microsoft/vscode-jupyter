@@ -198,8 +198,62 @@ function commentOutInvalidExport() {
     }
 }
 
+/**
+ * reflect-metadata 0.2.x stops looking up metadata once it has checked more than two registered providers,
+ * without checking the fallback provider that wraps metadata recorded by an older (0.1.x) copy.
+ * When multiple extensions load reflect-metadata in the same extension host, this makes existing metadata
+ * unreadable (https://github.com/microsoft/vscode-jupyter/issues/17578).
+ * Fix: continue to the fallback provider check instead of returning early.
+ */
+function fixReflectMetadataFallbackLookup() {
+    const packageDir = path.join(__dirname, '..', '..', 'node_modules', 'reflect-metadata');
+    const filePath = path.join(packageDir, 'Reflect.js');
+    const expectedVersion = '0.2.2';
+    if (!fs.existsSync(filePath)) {
+        throw new Error(
+            `reflect-metadata not found '${filePath}' (Jupyter Extension post install script, issue #17578)`
+        );
+    }
+    const { version } = fs.readJsonSync(path.join(packageDir, 'package.json'));
+    if (version !== expectedVersion) {
+        throw new Error(
+            `reflect-metadata ${version} found, but ${filePath} is patched for ${expectedVersion} (fallback provider lookup in getProviderNoCache, issue #17578). ` +
+                'Verify whether the new version still needs this patch, then update or remove fixReflectMetadataFallbackLookup in build/ci/postInstall.js.'
+        );
+    }
+    const marker = 'Modified by vscode-jupyter: fall through to fallback provider';
+    const fileContents = fs.readFileSync(filePath, 'utf8');
+    if (fileContents.includes(marker)) {
+        return;
+    }
+    const eol = fileContents.includes('\r\n') ? '\r\n' : '\n';
+    const original = [
+        'var next = IteratorStep(iterator);',
+        '                                if (!next) {',
+        '                                    return undefined;',
+        '                                }'
+    ].join(eol);
+    const replacement = [
+        'var next = IteratorStep(iterator);',
+        '                                if (!next) {',
+        `                                    /*! ${marker} (https://github.com/microsoft/vscode-jupyter/issues/17578) */`,
+        '                                    break;',
+        '                                }'
+    ].join(eol);
+    const occurrences = fileContents.split(original).length - 1;
+    if (occurrences !== 1) {
+        throw new Error(
+            `Expected exactly one fallback provider lookup in ${filePath} to patch (issue #17578), found ${occurrences}. ` +
+                'The code may have moved, or its indentation/line endings may have been changed by another tool.'
+        );
+    }
+    fs.writeFileSync(filePath, fileContents.replace(original, replacement));
+    console.log(colors.green(filePath + ' file updated (by Jupyter VSC)'));
+}
+
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
+fixReflectMetadataFallbackLookup();
 fixVariableNameInKernelDefaultJs();
 removeUnnecessaryLoggingFromKernelDefault();
 fixStripComments();

@@ -2285,7 +2285,7 @@
         "react-virtualized": "^9.21.1",
         "redux": "^4.0.4",
         "redux-logger": "^3.0.6",
-        "reflect-metadata": "^0.1.12",
+        "reflect-metadata": "0.2.2",
         "safe-buffer": "^5.2.1",
         "sanitize-filename": "^1.6.3",
         "semver": "^5.7.2",
