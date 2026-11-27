@@ -40,6 +40,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public experiments!: IExperiments;
     public allowUnauthorizedRemoteConnection: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
+    public kernelPortRangeStartPort: number = 9_000;
     public jupyterLaunchTimeout: number = 60_000;
     public jupyterLaunchRetries: number = 3;
     public notebookFileRoot: string = '';

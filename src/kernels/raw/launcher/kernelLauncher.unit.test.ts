@@ -59,7 +59,8 @@ suite('kernel Launcher', () => {
         when(pythonExecutionFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
         when(pythonExecService.exec(anything(), anything())).thenResolve({ stdout: '' });
         when(configService.getSettings(anything())).thenReturn({
-            jupyter: { logKernelOutputSeparately: false }
+            jupyter: { logKernelOutputSeparately: false },
+            kernelPortRangeStartPort: 9000
         } as any);
         kernelLauncher = new KernelLauncher(
             instance(processExecutionFactory),
@@ -133,5 +134,68 @@ suite('kernel Launcher', () => {
             const portForwardingIgnored = results.some((r) => r?.autoForwardAction === PortAutoForwardAction.Ignore);
             assert.isTrue(portForwardingIgnored, `Kernel Port ${port} should not be forwarded`);
         }
+    });
+    test('Verify custom start port is used from configuration', async () => {
+        // Reset the static port cache before this test
+        KernelLauncher.resetStartPort();
+
+        // Create a new launcher with custom port configuration
+        const customStartPort = 10000;
+        when(configService.getSettings(anything())).thenReturn({
+            jupyter: { logKernelOutputSeparately: false },
+            kernelPortRangeStartPort: customStartPort
+        } as any);
+
+        const customKernelLauncher = new KernelLauncher(
+            instance(processExecutionFactory),
+            instance(fs),
+            instance(extensionChecker),
+            instance(kernelEnvVarsService),
+            disposables,
+            instance(pythonExecutionFactory),
+            instance(configService),
+            instance(jupyterPaths),
+            instance(pythonKernelInterruptDaemon),
+            instance(platform)
+        );
+
+        const kernelSpec = PythonKernelConnectionMetadata.create({
+            id: '1',
+            interpreter: {
+                id: '2',
+                uri: Uri.file('python')
+            },
+            kernelSpec: {
+                argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                display_name: 'Python 3',
+                executable: 'python',
+                name: 'python3'
+            }
+        });
+        const cancellation = new CancellationTokenSource();
+        const launchStub = sinon.stub(KernelProcess.prototype, 'launch');
+        const exitedStub = sinon.stub(KernelProcess.prototype, 'exited');
+        disposables.push(new Disposable(() => launchStub.restore()));
+        disposables.push(new Disposable(() => exitedStub.restore()));
+        launchStub.resolves(undefined);
+        const exited = new EventEmitter<{
+            exitCode?: number | undefined;
+            reason?: string | undefined;
+        }>();
+        exitedStub.get(() => exited.event);
+
+        const oldPorts = new Set(UsedPorts);
+        await customKernelLauncher.launch(kernelSpec, 10_000, undefined, __dirname, cancellation.token);
+
+        // Verify that ports allocated are >= custom start port
+        let foundPortInRange = false;
+        for (const port of UsedPorts) {
+            if (!oldPorts.has(port)) {
+                // This is a newly allocated port
+                assert.isAtLeast(port, customStartPort, `Port ${port} should be >= ${customStartPort}`);
+                foundPortInRange = true;
+            }
+        }
+        assert.isTrue(foundPortInRange, 'At least one port should have been allocated in the custom range');
     });
 });
