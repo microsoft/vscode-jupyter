@@ -400,7 +400,7 @@ jobs:
           python-version: ${{matrix.pythonVersion}}
 
       - name: Install Conda environment from environment.yml
-        uses: mamba-org/setup-micromamba@ce51e99f4bb8a82ab7158c4dc59ef4634c59c4f9 # v3.1.0
+        uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39 # v3.2.1
         if: matrix.python == 'conda'
         with:
           cache-downloads: true
