@@ -7,8 +7,7 @@ import zipfile
 import requests
 from datetime import date, datetime, timedelta
 
-authtoken = sys.argv[1]
-print("Using authtoken with prefix: " + authtoken[:4])
+authtoken = os.environ["GITHUB_TOKEN"]
 
 
 # %%
@@ -146,8 +145,8 @@ def flattenTestResultsToFile(runResults, filename):
 
 
 inputDate = ""
-if len(sys.argv) > 2:
-    inputDate = sys.argv[2]
+if len(sys.argv) > 1:
+    inputDate = sys.argv[1]
 
 try:
     collectionDateTime = datetime.strptime(inputDate, "%Y-%m-%d")
