@@ -176,7 +176,9 @@ function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
         case 'display_data':
         case 'execute_result':
         case 'update_display_data': {
-            metadata.executionCount = output.execution_count;
+            if (output.execution_count !== undefined) {
+                metadata.executionCount = output.execution_count;
+            }
             metadata.metadata = output.metadata ? JSON.parse(JSON.stringify(output.metadata)) : {};
             break;
         }

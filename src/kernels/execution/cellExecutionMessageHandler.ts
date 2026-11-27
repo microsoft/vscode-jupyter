@@ -34,9 +34,9 @@ import { concatMultilineString, formatStreamText, isJupyterNotebook } from '../.
 import {
     traceCellMessage,
     cellOutputToVSCCellOutput,
-    translateCellDisplayOutput,
     CellOutputMimeTypes,
-    findErrorLocation
+    findErrorLocation,
+    getNotebookCellOutputMetadata
 } from './helpers';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
@@ -44,6 +44,7 @@ import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { Identifiers, RendererExtension, WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+import type { TrackedDisplayOutput } from './cellDisplayIdTracker';
 import { createDeferred } from '../../platform/common/utils/async';
 import { coerce, SemVer } from 'semver';
 
@@ -77,6 +78,29 @@ export function getParentHeaderMsgId(msg: KernelMessage.IMessage): string | unde
         return msg.parent_header.msg_id;
     }
     return undefined;
+}
+
+function logDisplayOutputError(operation: 'submit' | 'update', cell: NotebookCell, error: unknown): void {
+    // Error messages can contain output data; retain only a known error kind and internal stack location.
+    const errorName = error instanceof Error ? error.name : undefined;
+    const name =
+        typeof errorName === 'string' &&
+        /^(?:Error|TypeError|RangeError|ReferenceError|SyntaxError|URIError|EvalError|AbortError|CancellationError)$/.test(
+            errorName
+        )
+            ? errorName
+            : error instanceof Error
+            ? 'Error'
+            : error === null
+            ? 'null'
+            : typeof error;
+    const stack = error instanceof Error && typeof error.stack === 'string' ? error.stack : undefined;
+    const location = stack?.match(
+        /^\s*at\b[^\r\n]*\b((?:cellExecutionMessageHandler|cellExecutionCreator|extension(?:\.node|\.web)?|extHostNotebook|extensionHostProcess)\.(?:js|ts):\d+:\d+)\)?$/m
+    )?.[1];
+    logger.error(
+        `Failed to ${operation} display output for cell ${cell.index} (${name}${location ? ` at ${location}` : ''})`
+    );
 }
 
 /**
@@ -160,6 +184,7 @@ export class CellExecutionMessageHandler implements IDisposable {
     private commIdsMappedToParentWidgetModel = new Map<string, string>();
     private readonly disposables: IDisposable[] = [];
     private readonly prompts = new Set<CancellationTokenSource>();
+    private readonly pendingDisplayUpdates = new Set<TrackedDisplayOutput>();
     /**
      * List of comm_ids Jupyter sent back when this cell was first executed
      * or for any subsequent requests as a result of outputs sending custom messages.
@@ -255,6 +280,10 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.disposed = true;
         traceCellMessage(this.cell, 'Execution Message Handler disposed');
         dispose(this.disposables);
+        for (const output of this.pendingDisplayUpdates) {
+            CellOutputDisplayIdTracker.clearDeferredUpdate(output);
+        }
+        this.pendingDisplayUpdates.clear();
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
         // Assume you have a long running cell, then reload vscode, next this cell continues running.
@@ -623,6 +652,40 @@ export class CellExecutionMessageHandler implements IDisposable {
         }
         return { previousValueOfClearOutputOnNextUpdateToOutput: false };
     }
+
+    private submitDisplayOutput(
+        cell: NotebookCell,
+        output: NotebookCellOutput,
+        displayId: string | undefined,
+        task: NotebookCellExecution,
+        submit: () => Thenable<void>
+    ): void {
+        if (cell.document.isClosed || cell.notebook.isClosed) {
+            return;
+        }
+        let trackedOutput: TrackedDisplayOutput | undefined;
+        const onFailure = (error: unknown) => {
+            logDisplayOutputError('submit', cell, error);
+            if (trackedOutput) {
+                CellOutputDisplayIdTracker.retireOutput(trackedOutput);
+            }
+        };
+        try {
+            if (displayId) {
+                trackedOutput = CellOutputDisplayIdTracker.trackOutputByDisplayId(cell, displayId, output, task);
+            }
+            const write = submit();
+            write.then(() => {
+                if (trackedOutput) {
+                    CellOutputDisplayIdTracker.refreshOutput(trackedOutput);
+                }
+            }, onFailure);
+        } catch (ex) {
+            onFailure(ex);
+            throw ex;
+        }
+    }
+
     private addToCellData(
         output: ExecuteResult | DisplayData | nbformat.IStream | nbformat.IError | nbformat.IOutput,
         originalMessage: KernelMessage.IMessage
@@ -656,51 +719,50 @@ export class CellExecutionMessageHandler implements IDisposable {
             () => `Update output with mimes ${cellOutput.items.map((item) => item.mime).toString()}`
         );
         const task = this.getOrCreateExecutionTask(true);
-        // Clear if necessary
-        this.clearOutputIfNecessary(task);
-        // Keep track of the display_id against the output item, we might need this to update this later.
-        if (displayId) {
-            CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput, cellOutput.items);
-        }
-
-        this.clearLastUsedStreamOutput();
-        traceCellMessage(this.cell, 'Append output in addToCellData');
-        // If the output belongs to a widget, then add the output to that specific widget (i.e. just below the widget).
-        let outputShouldBeAppended = true;
-        const parentHeaderMsgId = getParentHeaderMsgId(originalMessage);
-        if (
-            this.outputsAreSpecificToAWidget.length &&
-            this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
-                parentHeaderMsgId &&
-            cellOutput.items.every((item) =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                this.canMimeTypeBeRenderedByWidgetManager(item)
-            )
-        ) {
-            // Plain text outputs will be displayed by the widget.
-            outputShouldBeAppended = false;
-        } else if (
-            this.outputsAreSpecificToAWidget.length &&
-            this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
-                parentHeaderMsgId
-        ) {
-            const result = this.updateJupyterOutputWidgetWithOutput(
-                {
-                    commId: this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1]
-                        .handlingCommId,
-                    outputToAppend: cellOutput
-                },
-                task
-            );
-
-            if (result?.outputAdded) {
+        try {
+            // Clear if necessary
+            this.clearOutputIfNecessary(task);
+            this.clearLastUsedStreamOutput();
+            traceCellMessage(this.cell, 'Append output in addToCellData');
+            // If the output belongs to a widget, then add the output to that specific widget (i.e. just below the widget).
+            let outputShouldBeAppended = true;
+            const parentHeaderMsgId = getParentHeaderMsgId(originalMessage);
+            if (
+                this.outputsAreSpecificToAWidget.length &&
+                this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
+                    parentHeaderMsgId &&
+                cellOutput.items.every((item) =>
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    this.canMimeTypeBeRenderedByWidgetManager(item)
+                )
+            ) {
+                // Plain text outputs will be displayed by the widget.
                 outputShouldBeAppended = false;
+            } else if (
+                this.outputsAreSpecificToAWidget.length &&
+                this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
+                    parentHeaderMsgId
+            ) {
+                const result = this.updateJupyterOutputWidgetWithOutput(
+                    {
+                        commId: this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1]
+                            .handlingCommId,
+                        outputToAppend: cellOutput,
+                        displayId
+                    },
+                    task
+                );
+
+                if (result?.outputAdded) {
+                    outputShouldBeAppended = false;
+                }
             }
+            if (outputShouldBeAppended && task) {
+                this.submitDisplayOutput(this.cell, cellOutput, displayId, task, () => task.appendOutput([cellOutput]));
+            }
+        } finally {
+            this.endTemporaryTask();
         }
-        if (outputShouldBeAppended) {
-            task?.appendOutput([cellOutput]).then(noop, noop);
-        }
-        this.endTemporaryTask();
     }
 
     /**
@@ -750,7 +812,7 @@ export class CellExecutionMessageHandler implements IDisposable {
      * - Appending custom output after the output widget
      */
     private updateJupyterOutputWidgetWithOutput(
-        options: { outputToAppend: NotebookCellOutput; commId: string } | { clearOutput: true },
+        options: { outputToAppend: NotebookCellOutput; commId: string; displayId?: string } | { clearOutput: true },
         task?: NotebookCellExecution
     ): { outputAdded: true } | undefined {
         const outputAreSpecificToAWidgetHandlingCommId = this.outputsAreSpecificToAWidget.length
@@ -761,6 +823,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             return;
         }
         const outputToAppend = 'outputToAppend' in options ? options.outputToAppend : undefined;
+        const displayId = 'outputToAppend' in options ? options.displayId : undefined;
 
         const expectedModelId = this.commIdsMappedToParentWidgetModel.get(commId) || commId;
         // Find the cell that owns the widget (where its model_id = commId).
@@ -820,7 +883,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         const outputsAfterWidget = newOutputs.slice(newOutputs.indexOf(widgetOutput) + 1);
 
         CellExecutionMessageHandler.outputsOwnedByWidgetModel.set(expectedModelId, outputsOwnedByWidgetModel);
-        if (outputToAppend) {
+        if (outputToAppend && task && !cell.document.isClosed && !cell.notebook.isClosed) {
             // Keep track of the output added that belongs to the widget.
             // Next time when we need to clear the output belonging to this widget, all we need to do is
             // filter out (exclude) these outputs.
@@ -833,10 +896,16 @@ export class CellExecutionMessageHandler implements IDisposable {
             : outputsUptoWidget.concat(outputsAfterWidget);
         if (outputsAfterWidget.length === 0 && outputToAppend) {
             // No need to replace everything, just append what we need.
-            task?.appendOutput(outputToAppend, cell).then(noop, noop);
+            if (task) {
+                this.submitDisplayOutput(cell, outputToAppend, displayId, task, () =>
+                    task.appendOutput(outputToAppend, cell)
+                );
+            }
         } else if (clearWidgetOutput && !outputToAppend && outputsAfterWidget.length === 0) {
             // We're supposed to clear the output after a specific widget, but there are no other outputs after the widget.
             // As there's nothing to clear, hence no changes to be made.
+        } else if (outputToAppend && task) {
+            this.submitDisplayOutput(cell, outputToAppend, displayId, task, () => task.replaceOutput(newOutput, cell));
         } else {
             task?.replaceOutput(newOutput, cell).then(noop, noop);
         }
@@ -1135,100 +1204,201 @@ export class CellExecutionMessageHandler implements IDisposable {
     private handleUpdateDisplayDataMessage(msg: KernelMessage.IUpdateDisplayDataMsg) {
         const displayId = msg.content.transient.display_id;
         if (!displayId) {
-            logger.warn('Update display data message received, but no display id', msg.content);
+            logger.warn('Update display data message received, but no display id');
             return;
         }
-        const outputToBeUpdated = CellOutputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
+        const outputToBeUpdated = CellOutputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId, false);
         if (!outputToBeUpdated) {
             // Possible this is a display Id that was created by code executed by an extension.
-            logger.trace('Update display data message received, but no output found to update', msg.content);
+            logger.trace('Update display data message received, but no output found to update');
             return;
         }
-        if (outputToBeUpdated.cell.document.isClosed) {
-            logger.warn('Update display data message received, but output cell is closed', msg.content);
-            return;
-        }
-        const output = translateCellDisplayOutput(
-            new NotebookCellOutput(outputToBeUpdated.outputItems, outputToBeUpdated.outputContainer.metadata)
+        this.updateDisplayOutput(outputToBeUpdated, msg.content);
+    }
+
+    private createDisplayUpdate(
+        outputToBeUpdated: TrackedDisplayOutput,
+        content: KernelMessage.IUpdateDisplayDataMsg['content']
+    ): { output: NotebookCellOutput; itemsChanged: boolean; metadataChanged: boolean } {
+        const metadata = getNotebookCellOutputMetadata(outputToBeUpdated.outputContainer);
+        const outputType =
+            metadata?.outputType === 'execute_result' || metadata?.outputType === 'update_display_data'
+                ? metadata.outputType
+                : 'display_data';
+        const displayData: nbformat.IDisplayData = {
+            output_type: 'display_data',
+            data: content.data,
+            metadata: content.metadata,
+            transient: metadata?.transient
+        };
+        const newOutput = cellOutputToVSCCellOutput(
+            outputType === 'execute_result'
+                ? {
+                      ...displayData,
+                      output_type: 'execute_result',
+                      execution_count: typeof metadata?.executionCount === 'number' ? metadata.executionCount : null
+                  }
+                : outputType === 'update_display_data'
+                ? { ...displayData, output_type: 'update_display_data' }
+                : displayData
         );
-        const newOutput = cellOutputToVSCCellOutput({
-            ...output,
-            data: msg.content.data,
-            metadata: msg.content.metadata
-        } as nbformat.IDisplayData);
-        // If there was no output and still no output, then nothing to do.
-        if (outputToBeUpdated.outputItems.length === 0 && newOutput.items.length === 0) {
-            logger.trace('Update display data message received, but no output to update', msg.content);
+        const previousMetadata = { ...outputToBeUpdated.outputContainer.metadata };
+        delete previousMetadata.__displayOpenPlotIcon;
+        newOutput.metadata = { ...previousMetadata, ...newOutput.metadata };
+        const itemsEqual = (items: readonly NotebookCellOutputItem[] | undefined) =>
+            !!items &&
+            items.length === newOutput.items.length &&
+            items.every((item, index) => fastDeepEqual(item, newOutput.items[index]));
+        const observedItems = outputToBeUpdated.outputContainer.items;
+        const observedMetadata = outputToBeUpdated.outputContainer.metadata;
+        const pendingMetadata = outputToBeUpdated.pendingOutputMetadata;
+        return {
+            output: newOutput,
+            itemsChanged:
+                !itemsEqual(outputToBeUpdated.outputItems) ||
+                (outputToBeUpdated.observed &&
+                    observedItems !== outputToBeUpdated.outputItems &&
+                    !itemsEqual(observedItems)),
+            metadataChanged:
+                !fastDeepEqual(observedMetadata || {}, newOutput.metadata || {}) ||
+                (!!pendingMetadata && !fastDeepEqual(pendingMetadata.value || {}, newOutput.metadata || {}))
+        };
+    }
+
+    private deferDisplayUpdate(
+        output: TrackedDisplayOutput,
+        content: KernelMessage.IUpdateDisplayDataMsg['content']
+    ): void {
+        const deferred = CellOutputDisplayIdTracker.deferUpdate(
+            output,
+            () => {
+                if (
+                    this.disposed ||
+                    this.cell.document.isClosed ||
+                    this.cell.notebook.isClosed ||
+                    this.cell.index < 0
+                ) {
+                    return;
+                }
+                try {
+                    this.updateDisplayOutput(output, content);
+                } catch (ex) {
+                    logDisplayOutputError('update', output.cell, ex);
+                }
+            },
+            () => {
+                this.pendingDisplayUpdates.delete(output);
+            }
+        );
+        if (deferred) {
+            this.pendingDisplayUpdates.add(output);
+        }
+    }
+
+    private updateDisplayOutput(
+        output: TrackedDisplayOutput,
+        content: KernelMessage.IUpdateDisplayDataMsg['content']
+    ): void {
+        let update = this.createDisplayUpdate(output, content);
+        const activeWriter = this.execution || activeNotebookCellExecution.get(this.cell.notebook);
+        const sameWriter = !!activeWriter && activeWriter === output.pendingWriter;
+        if (!output.observed && (update.metadataChanged || !sameWriter)) {
+            if (update.itemsChanged || update.metadataChanged || output.deferredUpdate) {
+                this.deferDisplayUpdate(output, content);
+            }
             return;
         }
-        // Compare each output item (at the end of the day everything is serializable).
-        // Hence this is a safe comparison.
-        let outputMetadataHasChanged = false;
-        if (outputToBeUpdated.outputItems.length === newOutput.items.length) {
-            let allAllOutputItemsSame = true;
-            if (!fastDeepEqual(outputToBeUpdated.outputContainer.metadata || {}, newOutput.metadata || {})) {
-                outputMetadataHasChanged = true;
-                allAllOutputItemsSame = false;
+
+        CellOutputDisplayIdTracker.clearDeferredUpdate(output);
+        if (!update.itemsChanged && !update.metadataChanged) {
+            logger.trace('Update display data message received, but no output to update (data is the same)');
+            return;
+        }
+
+        const previousContainer = output.outputContainer;
+        const previousItems = output.outputItems;
+        const previousPendingMetadata = output.pendingOutputMetadata;
+        const wasObserved = output.observed;
+        const task = this.getOrCreateExecutionTask(false);
+        if (!task) {
+            this.endTemporaryTask();
+            return;
+        }
+        try {
+            if (!activeWriter) {
+                // Creating a task calls the editor and can change the destination before the write.
+                if (
+                    CellOutputDisplayIdTracker.getMappedOutput(output.cell.notebook, output.displayId, false) !== output
+                ) {
+                    return;
+                }
+                if (
+                    output.outputContainer !== previousContainer ||
+                    output.outputItems !== previousItems ||
+                    output.pendingOutputMetadata !== previousPendingMetadata ||
+                    output.observed !== wasObserved
+                ) {
+                    update = this.createDisplayUpdate(output, content);
+                }
+                if (!output.observed && (update.metadataChanged || task !== output.pendingWriter)) {
+                    this.deferDisplayUpdate(output, content);
+                    return;
+                }
+                if (!update.itemsChanged && !update.metadataChanged) {
+                    return;
+                }
             }
-            if (allAllOutputItemsSame) {
-                for (let index = 0; index < outputToBeUpdated.outputItems.length; index++) {
-                    if (!fastDeepEqual(outputToBeUpdated.outputItems[index], newOutput.items[index])) {
-                        allAllOutputItemsSame = false;
-                        break;
+            traceCellMessage(this.cell, `Replace output items in display data ${update.output.items.length}`);
+            const submittedItems = update.output.items;
+            let write: Thenable<void>;
+            if (update.metadataChanged) {
+                // VS Code only offers a whole-cell replacement for output metadata.
+                const outputs = [...output.cell.outputs];
+                let matchingIndex = -1;
+                for (let index = 0; index < outputs.length; index++) {
+                    if (CellOutputDisplayIdTracker.getOutputTrackingId(outputs[index]) === output.trackingId) {
+                        if (matchingIndex !== -1) {
+                            return;
+                        }
+                        matchingIndex = index;
                     }
                 }
-            }
-            if (allAllOutputItemsSame) {
-                // If everything is still the same, then there's nothing to update.
-                logger.trace(
-                    'Update display data message received, but no output to update (data is the same)',
-                    msg.content
-                );
-                return;
-            }
-        }
-        traceCellMessage(this.cell, `Replace output items in display data ${newOutput.items.length}`);
-        if (outputMetadataHasChanged) {
-            // https://github.com/microsoft/vscode/issues/181369
-            // This operation is very unsafe as we replace all of the outputs, when we need to replace just one output.
-            // Unsafe because its possible some new outputs were added to this cell (appended).
-            // However this is the only way we can update the output along with its metadata.
-            const newOutputs = outputToBeUpdated.cell.outputs.map((o) => {
-                const jupyterOutput = translateCellDisplayOutput(o);
-                // Replace just the item that stores the display data.
-                if (
-                    jupyterOutput.output_type === 'display_data' &&
-                    'transient' in jupyterOutput &&
-                    jupyterOutput.transient &&
-                    typeof jupyterOutput.transient === 'object' &&
-                    'display_id' in jupyterOutput.transient &&
-                    typeof jupyterOutput.transient.display_id === 'string' &&
-                    jupyterOutput.transient.display_id === displayId
-                ) {
-                    return newOutput;
+                if (matchingIndex === -1) {
+                    return;
                 }
-                return o;
-            });
-            const task = this.getOrCreateExecutionTask(false);
-            task?.replaceOutput(newOutputs, outputToBeUpdated.cell).then(noop, noop);
-            CellOutputDisplayIdTracker.trackOutputByDisplayId(
-                outputToBeUpdated.cell,
-                displayId,
-                newOutput,
-                newOutput.items
+                outputs[matchingIndex] = update.output;
+                write = task.replaceOutput(outputs, output.cell);
+            } else {
+                write = task.replaceOutputItems(submittedItems, output.outputContainer);
+            }
+            output.outputItems = submittedItems;
+            const pendingMetadata = { value: update.output.metadata };
+            output.pendingOutputMetadata = pendingMetadata;
+            const releasePendingMetadata = () => {
+                if (output.pendingOutputMetadata === pendingMetadata) {
+                    output.pendingOutputMetadata = undefined;
+                }
+            };
+            write.then(
+                () => {
+                    releasePendingMetadata();
+                    CellOutputDisplayIdTracker.refreshOutput(output);
+                },
+                (error) => {
+                    releasePendingMetadata();
+                    // A rejected older write must not invalidate a newer submission.
+                    if (output.outputItems === submittedItems) {
+                        output.outputItems = undefined;
+                    }
+                    logDisplayOutputError('update', output.cell, error);
+                }
             );
-        } else {
-            const task = this.getOrCreateExecutionTask(false);
-            task?.replaceOutputItems(newOutput.items, outputToBeUpdated.outputContainer).then(noop, noop);
-            CellOutputDisplayIdTracker.trackOutputByDisplayId(
-                outputToBeUpdated.cell,
-                // Though the items have been replaced, the output container is still the same, hence keep track of the last output object.
-                displayId,
-                outputToBeUpdated.outputContainer,
-                newOutput.items
-            );
+        } catch (ex) {
+            logDisplayOutputError('update', output.cell, ex);
+            throw ex;
+        } finally {
+            this.endTemporaryTask();
         }
-        this.endTemporaryTask();
     }
 }
 
