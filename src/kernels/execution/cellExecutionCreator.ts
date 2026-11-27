@@ -13,6 +13,7 @@ import { logger } from '../../platform/logging';
 import { IKernelController } from '../types';
 import { noop } from '../../platform/common/utils/misc';
 import { getNotebookTelemetryTracker } from '../telemetry/notebookTelemetry';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 
 /**
  * Wrapper class around NotebookCellExecution that allows us to
@@ -68,7 +69,7 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
             // That's when we clear the output. (ideally it should be cleared as soon as its queued, but thats an upstream core issue).
             if (this.clearOutputOnStartWithTime) {
                 logger.trace(`Start cell ${this.cell.index} execution @ ${startTime} (clear output)`);
-                this._impl.clearOutput().then(noop, noop);
+                this.clearOutput().then(noop, noop);
             } else {
                 logger.trace(`Start cell ${this.cell.index} execution @ ${startTime}`);
             }
@@ -91,7 +92,20 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     }
     clearOutput(cell?: NotebookCell): Thenable<void> {
         this.startIfNecessary();
-        return this._impl.clearOutput(cell);
+        const destination = cell ?? this.cell;
+        const candidates = CellOutputDisplayIdTracker.getPendingOutputs(destination, this);
+        const result = this._impl.clearOutput(cell);
+        if (candidates.length) {
+            result.then(() => {
+                const pending = new Set(CellOutputDisplayIdTracker.getPendingOutputs(destination, this));
+                for (const candidate of candidates) {
+                    if (pending.has(candidate)) {
+                        CellOutputDisplayIdTracker.retireOutput(candidate);
+                    }
+                }
+            }, noop);
+        }
+        return result;
     }
     replaceOutput(out: NotebookCellOutput | NotebookCellOutput[], cell?: NotebookCell): Thenable<void> {
         this.startIfNecessary();

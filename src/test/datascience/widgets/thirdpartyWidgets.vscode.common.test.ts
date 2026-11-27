@@ -2,8 +2,19 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, ConfigurationTarget, Memento, NotebookEditor, window, workspace } from 'vscode';
+import {
+    commands,
+    ConfigurationTarget,
+    Memento,
+    NotebookCell,
+    NotebookEditor,
+    NotebookEditorRevealType,
+    NotebookRange,
+    window,
+    workspace
+} from 'vscode';
 import { logger } from '../../../platform/logging';
 import {
     GLOBAL_MEMENTO,
@@ -21,8 +32,11 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     defaultNotebookTestTimeout,
+    deleteAllCellsAndWait,
+    insertCodeCell,
     prewarmNotebooks,
-    selectDefaultController
+    selectDefaultController,
+    waitForTextOutput
 } from '../notebook/helper';
 import {
     assertOutputContainsHtml,
@@ -34,6 +48,7 @@ import {
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../notebooks/controllers/ipywidgets/scriptSourceProvider/cdnWidgetScriptSourceProvider';
 import { hideOutputPanel, initializeWidgetComms, Utils } from './commUtils';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { generateUuid } from '../../../platform/common/uuid';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 [true, false].forEach((useCDN) => {
@@ -75,13 +90,13 @@ import { IS_REMOTE_NATIVE_TEST } from '../../constants';
             await prewarmNotebooks();
             sinon.restore();
             editor = (await createEmptyPythonNotebook(disposables, undefined, true)).editor;
+            comms = initializeWidgetComms(disposables, editor);
             await selectDefaultController(editor);
             // Widgets get rendered only when the output is in view. If we have a very large notebook
             // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
             // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
             await hideOutputPanel();
             await commands.executeCommand('workbench.action.maximizeEditorHideSidebar');
-            comms = await initializeWidgetComms(disposables);
 
             logger.info('Suite Setup (completed)');
         });
@@ -229,5 +244,117 @@ import { IS_REMOTE_NATIVE_TEST } from '../../constants';
             await assertOutputContainsHtml(cell2, comms, ['>Figure', '<canvas', 'Download plot']);
             await assertOutputContainsHtml(cell3, comms, ['>Figure', '<canvas', 'Download plot']);
         });
+
+        if (!useCDN) {
+            test('#17554 preserves an ordinary display alongside captured widget output', async function () {
+                this.retries(0);
+                const id = generateUuid();
+                const readyMarker = `widget-ready-${id}`;
+                const capturedMarker = `widget-captured-${id}`;
+                const sourceMarker = `source-${id}`;
+                const updatedMarker = `updated-${id}`;
+                const displayId = `display-${id}`;
+                const widgetMime = 'application/vnd.jupyter.widget-view+json';
+                await window.showNotebookDocument(editor.notebook, { viewColumn: editor.viewColumn });
+                assert.strictEqual(
+                    window.activeNotebookEditor?.notebook,
+                    editor.notebook,
+                    'Suite notebook is not active'
+                );
+                await deleteAllCellsAndWait();
+                const origin = await insertCodeCell(
+                    [
+                        'import ipywidgets as widgets',
+                        'from IPython.display import display',
+                        'out = widgets.Output()',
+                        `out.append_stdout(${JSON.stringify(
+                            readyMarker + ' ipywidgets='
+                        )} + widgets.__version__ + '\\n')`,
+                        'display(out)',
+                        `did = display(${JSON.stringify(sourceMarker)}, display_id=${JSON.stringify(displayId)})`
+                    ].join('\n'),
+                    { index: 0 }
+                );
+                const capture = await insertCodeCell(
+                    `with out:\n    display(${JSON.stringify(capturedMarker)}, display_id=${JSON.stringify(displayId)})`
+                );
+                const updater = await insertCodeCell(`did.update(${JSON.stringify(updatedMarker)})`);
+                await commands.executeCommand('notebook.cell.collapseAllCellInputs');
+                const revealOrigin = () =>
+                    editor.revealRange(
+                        new NotebookRange(origin.index, origin.index + 1),
+                        NotebookEditorRevealType.AtTop
+                    );
+                revealOrigin();
+
+                const unexpectedOutputs: string[] = [];
+                const outputSubscription = workspace.onDidChangeNotebookDocument((event) => {
+                    if (event.notebook !== editor.notebook) {
+                        return;
+                    }
+                    for (const change of event.cellChanges) {
+                        if ((change.cell === capture || change.cell === updater) && change.outputs?.length) {
+                            unexpectedOutputs.push(change.cell === capture ? 'capture' : 'updater');
+                        }
+                    }
+                });
+                try {
+                    const execute = async (cell: NotebookCell) => {
+                        await executeCellAndDontWaitForOutput(cell);
+                        const summary = await waitForCondition(
+                            () =>
+                                typeof cell.executionSummary?.success === 'boolean' ? cell.executionSummary : undefined,
+                            defaultNotebookTestTimeout,
+                            `Cell ${cell.index + 1} has no execution result`
+                        );
+                        assert.isTrue(summary.success, `Cell ${cell.index + 1} failed`);
+                    };
+                    await execute(origin);
+                    await waitForCondition(
+                        () =>
+                            origin.outputs.length === 2 &&
+                            origin.outputs[0].items.some((item) => item.mime === widgetMime),
+                        defaultNotebookTestTimeout,
+                        'Origin did not produce a widget and an ordinary display'
+                    );
+                    await waitForTextOutput(origin, `'${sourceMarker}'`, 1);
+                    assert.isTrue(origin.outputs[1].items.some((item) => item.mime === 'text/plain'));
+                    const widgetData = origin.outputs[0].items.find((item) => item.mime === widgetMime)!.data.slice();
+                    const modelId = (JSON.parse(new TextDecoder().decode(widgetData)) as { model_id?: string })
+                        .model_id;
+                    assert.isTrue(typeof modelId === 'string' && modelId.length > 0, 'Missing widget model');
+
+                    await assertOutputContainsHtml(origin, comms, [readyMarker], '.widget-output');
+                    assert.notInclude(await comms.queryHtml(origin, '.widget-output'), capturedMarker);
+
+                    await execute(capture);
+                    revealOrigin();
+                    await assertOutputContainsHtml(origin, comms, [readyMarker, capturedMarker], '.widget-output');
+                    assertHasTextOutputInVSCode(origin, `'${sourceMarker}'`, 1);
+
+                    await execute(updater);
+                    revealOrigin();
+                    await waitForTextOutput(origin, `'${updatedMarker}'`, 1);
+                    assert.lengthOf(origin.outputs, 2);
+                    assert.isTrue(origin.outputs[1].items.some((item) => item.mime === 'text/plain'));
+                    const widgetItems = origin.outputs.flatMap((output) =>
+                        output.items.filter((item) => item.mime === widgetMime)
+                    );
+                    assert.lengthOf(widgetItems, 1);
+                    assert.deepEqual(widgetItems[0].data, widgetData, 'Widget sibling changed');
+                    await assertOutputContainsHtml(origin, comms, [readyMarker], '.widget-output');
+                    assert.isAbove(capture.executionSummary!.executionOrder!, origin.executionSummary!.executionOrder!);
+                    assert.isAbove(
+                        updater.executionSummary!.executionOrder!,
+                        capture.executionSummary!.executionOrder!
+                    );
+                    assert.isEmpty(capture.outputs, 'Capture cell emitted output');
+                    assert.isEmpty(updater.outputs, 'Updater cell emitted output');
+                    assert.isEmpty(unexpectedOutputs, 'An issuing cell briefly emitted output');
+                } finally {
+                    outputSubscription.dispose();
+                }
+            });
+        }
     });
 });
